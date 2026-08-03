@@ -1,0 +1,6 @@
+{
+  "name": "Javascript RPG - Modern Edition",
+  "description": "2D Retro RPG with Vite, React, Start & Pause Menus, Audio FX, Custom Keybinds, and GitHub Pages support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
