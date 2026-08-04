@@ -511,55 +511,203 @@ export class RpgGameEngine {
     }
   }
 
-  private mapGenerate() {
-    const map: MapTile[][] = [];
-    const cols = RpgGameEngine.MAP_COLS;
-    const rows = RpgGameEngine.MAP_ROWS;
+  private generateCellularAutomata(map: MapTile[][], cols: number, rows: number) {
+    const tempMap: number[][] = [];
+    const fillProbability = 0.42;
 
     for (let x = 0; x < cols; x++) {
-      map[x] = [];
+      tempMap[x] = [];
       for (let y = 0; y < rows; y++) {
-        // Town Center safe area (cols 26..38, rows 26..38)
-        const isCenterArea = x >= 26 && x <= 38 && y >= 26 && y <= 38;
+        tempMap[x][y] = Math.random() < fillProbability ? 1 : 0;
+      }
+    }
 
-        if (isCenterArea) {
-          if ((x === 28 || x === 36) && y === 32) {
-            map[x][y] = "flowers2";
-          } else if (x === 32 && (y === 28 || y === 36)) {
-            map[x][y] = "flowers";
-          } else {
-            map[x][y] = undefined;
+    for (let i = 0; i < 4; i++) {
+      const nextMap: number[][] = [];
+      for (let x = 0; x < cols; x++) {
+        nextMap[x] = [];
+        for (let y = 0; y < rows; y++) {
+          let neighbors = 0;
+          for (let nx = -1; nx <= 1; nx++) {
+            for (let ny = -1; ny <= 1; ny++) {
+              if (nx === 0 && ny === 0) continue;
+              const checkX = x + nx;
+              const checkY = y + ny;
+              if (checkX >= 0 && checkX < cols && checkY >= 0 && checkY < rows) {
+                neighbors += tempMap[checkX][checkY];
+              } else {
+                neighbors++; // Edges count as walls
+              }
+            }
           }
-          continue;
+          if (tempMap[x][y] === 1) {
+            nextMap[x][y] = neighbors >= 4 ? 1 : 0;
+          } else {
+            nextMap[x][y] = neighbors >= 5 ? 1 : 0;
+          }
         }
-
-        const rand = Math.floor(Math.random() * 10000);
-        if (rand > 9940) {
-          map[x][y] = "skull";
-        } else if (rand > 9850) {
-          map[x][y] = "rock2";
-        } else if (rand > 9750) {
-          map[x][y] = "flowers2";
-        } else if (rand > 9300) {
-          map[x][y] = "flowers";
-        } else if (rand > 9000) {
-          map[x][y] = "rock";
-        } else if (rand > 8700) {
-          map[x][y] = "groundLog";
-        } else {
-          map[x][y] = undefined;
+      }
+      for (let x = 0; x < cols; x++) {
+        for (let y = 0; y < rows; y++) {
+          tempMap[x][y] = nextMap[x][y];
         }
       }
     }
 
-    this.generateEnemies(map);
+    // Convert CA to tiles
+    for (let x = 0; x < cols; x++) {
+      for (let y = 0; y < rows; y++) {
+        if (tempMap[x][y] === 1) {
+          const r = Math.random();
+          if (r < 0.1) map[x][y] = "groundLog";
+          else if (r < 0.5) map[x][y] = "rock";
+          else map[x][y] = "rock2";
+        } else {
+          const r = Math.random();
+          if (r < 0.05) map[x][y] = "flowers";
+          else if (r < 0.1) map[x][y] = "flowers2";
+          else map[x][y] = undefined;
+        }
+      }
+    }
+  }
+
+  private generateCityLayout(map: MapTile[][], cols: number, rows: number) {
+    // Fill with city ground
+    for (let x = 0; x < cols; x++) {
+      for (let y = 0; y < rows; y++) {
+        map[x][y] = undefined;
+      }
+    }
+
+    // BSP for city blocks
+    const blocks: {x: number, y: number, w: number, h: number}[] = [{x: 2, y: 2, w: cols - 4, h: rows - 4}];
+    
+    for (let i = 0; i < 4; i++) {
+      const currentBlocks = [...blocks];
+      blocks.length = 0;
+      for (const block of currentBlocks) {
+        if (block.w > 12 && block.h > 12) {
+          if (Math.random() > 0.5) {
+            // vertical split
+            const split = Math.floor(block.w / 2) + Math.floor(Math.random() * 4) - 2;
+            blocks.push({x: block.x, y: block.y, w: split, h: block.h});
+            blocks.push({x: block.x + split, y: block.y, w: block.w - split, h: block.h});
+          } else {
+            // horizontal split
+            const split = Math.floor(block.h / 2) + Math.floor(Math.random() * 4) - 2;
+            blocks.push({x: block.x, y: block.y, w: block.w, h: split});
+            blocks.push({x: block.x, y: block.y + split, w: block.w, h: block.h - split});
+          }
+        } else {
+          blocks.push(block);
+        }
+      }
+    }
+
+    for (const block of blocks) {
+      const rx = block.x + 1;
+      const ry = block.y + 1;
+      const rw = block.w - 2;
+      const rh = block.h - 2;
+
+      for (let x = block.x; x < block.x + block.w; x++) {
+        map[x][block.y] = "city_road";
+        map[x][block.y + block.h - 1] = "city_road";
+      }
+      for (let y = block.y; y < block.y + block.h; y++) {
+        map[block.x][y] = "city_road";
+        map[block.x + block.w - 1][y] = "city_road";
+      }
+
+      const isPlaza = Math.random() < 0.25;
+      if (isPlaza) {
+        for (let x = rx; x < rx + rw; x++) {
+          for (let y = ry; y < ry + rh; y++) {
+            if (Math.random() < 0.1) map[x][y] = "flowers";
+            else map[x][y] = "city_plaza";
+          }
+        }
+      } else {
+        for (let x = rx; x < rx + rw; x++) {
+          for (let y = ry; y < ry + rh; y++) {
+            if (x === rx || x === rx + rw - 1 || y === ry || y === ry + rh - 1) {
+              if (Math.random() < 0.8) map[x][y] = "city_house";
+            }
+          }
+        }
+      }
+    }
+    
+    // Main Roads traversing the whole map
+    const midX = Math.floor(cols / 2);
+    const midY = Math.floor(rows / 2);
+    for (let x = 0; x < cols; x++) {
+      map[x][midY] = "city_road";
+      map[x][midY + 1] = "city_road";
+      map[x][midY - 1] = "city_road";
+    }
+    for (let y = 0; y < rows; y++) {
+      map[midX][y] = "city_road";
+      map[midX + 1][y] = "city_road";
+      map[midX - 1][y] = "city_road";
+    }
+
+    // Clear a central plaza for the player
+    for (let x = midX - 3; x <= midX + 3; x++) {
+      for (let y = midY - 3; y <= midY + 3; y++) {
+        map[x][y] = "city_plaza";
+      }
+    }
+  }
+
+  private mapGenerate() {
+    const map: MapTile[][] = [];
+    const cols = RpgGameEngine.MAP_COLS;
+    const rows = RpgGameEngine.MAP_ROWS;
+    
+    for (let x = 0; x < cols; x++) {
+      map[x] = [];
+    }
+
+    const coords = this.currentMap.split(',').map(Number);
+    const isCapital = coords[0] === 0 && coords[1] === 0;
+
+    if (isCapital) {
+      this.generateCityLayout(map, cols, rows);
+    } else {
+      this.generateCellularAutomata(map, cols, rows);
+    }
+
+    // Clear a safe radius around entrances (edges) and center to prevent getting stuck
+    const safeZones = [
+      {x: Math.floor(cols/2), y: Math.floor(rows/2), r: 4}, // Center
+      {x: 0, y: Math.floor(rows/2), r: 3}, // Left
+      {x: cols - 1, y: Math.floor(rows/2), r: 3}, // Right
+      {x: Math.floor(cols/2), y: 0, r: 3}, // Top
+      {x: Math.floor(cols/2), y: rows - 1, r: 3}, // Bottom
+    ];
+
+    for (let x = 0; x < cols; x++) {
+      for (let y = 0; y < rows; y++) {
+        for (const zone of safeZones) {
+          if (Math.hypot(x - zone.x, y - zone.y) <= zone.r) {
+            if (this.isTileSolid(map[x][y])) {
+               map[x][y] = isCapital ? "city_plaza" : undefined;
+            }
+          }
+        }
+      }
+    }
+
+    this.generateEnemies(map, isCapital);
     this.maps[this.currentMap] = map;
     this.stats.visitedCoords = Object.keys(this.maps);
     this.stats.mapsExplored = this.stats.visitedCoords.length;
     this.mapChanged = false;
   }
 
-  private generateEnemies(map: MapTile[][]) {
+  private generateEnemies(map: MapTile[][], isCapital: boolean) {
     const thisMap = this.currentMap.split(',').map(n => parseInt(n) || 0);
     const mapX = thisMap[0] === 0 ? 1 : thisMap[0];
     const mapY = thisMap[1] === 0 ? 1 : thisMap[1];
@@ -572,11 +720,11 @@ export class RpgGameEngine {
 
     for (let x = 0; x < cols; x++) {
       for (let y = 0; y < rows; y++) {
-        // Safe Zone in town center (cols 22..42, rows 22..42) - no enemies spawn here
-        if (x >= 22 && x <= 42 && y >= 22 && y <= 42) continue;
+        // No enemies in the capital city
+        if (isCapital) continue;
 
         const randomNumber = Math.floor(Math.random() * 1000);
-        // ~2% chance outside safe zone (~60-80 enemies across 64x64 grid)
+        // ~2% chance (~60-80 enemies across 64x64 grid)
         if (randomNumber > 980) {
           const enemyLevel = Math.max(1, Math.floor(distanceFromCenter / 2) + Math.floor(Math.random() * 2));
           const maxHp = 60 + enemyLevel * 25;
@@ -601,7 +749,7 @@ export class RpgGameEngine {
 
   public isTileSolid(item: MapTile | undefined): boolean {
     if (!item || typeof item !== 'string') return false;
-    return item === "rock" || item === "rock2" || item === "groundLog" || item === "skull";
+    return item === "rock" || item === "rock2" || item === "groundLog" || item === "skull" || item === "city_house";
   }
 
   public isPositionBlocked(x: number, y: number, w: number, h: number): boolean {
@@ -840,43 +988,6 @@ export class RpgGameEngine {
       this.ctx.fillRect(-2000, -2000, totalW + 4000, totalH + 4000);
     }
 
-    // Cobblestone Roads & Town Square
-    const midX = totalW / 2;
-    const midY = totalH / 2;
-
-    this.ctx.fillStyle = '#64533b'; // Main Road Color
-    this.ctx.fillRect(0, midY - 60, totalW, 120); // Horizontal Main Road
-    this.ctx.fillRect(midX - 60, 0, 120, totalH); // Vertical Main Road
-
-    // Central Plaza Circle
-    this.ctx.fillStyle = '#334155';
-    this.ctx.beginPath();
-    this.ctx.arc(midX, midY, 260, 0, Math.PI * 2);
-    this.ctx.fill();
-
-    this.ctx.strokeStyle = '#64748b';
-    this.ctx.lineWidth = 6;
-    this.ctx.beginPath();
-    this.ctx.arc(midX, midY, 260, 0, Math.PI * 2);
-    this.ctx.stroke();
-
-    // Central Monument Text
-    this.ctx.font = 'bold 16px sans-serif';
-    this.ctx.fillStyle = '#fef08a';
-    const coords = (this.currentMap || "0,0").split(',').map(Number);
-    const regionTitle = this.getRegionName(coords[0] || 0, coords[1] || 0);
-    this.ctx.fillText(`🏛️ Centro de ${regionTitle}`, midX, midY - 20);
-
-    // City Gates at the 4 exits
-    const parts = this.currentMap.split(',').map(Number);
-    const mx = parts[0] || 0;
-    const my = parts[1] || 0;
-
-    this.drawCityGate(0, midY - 50, `⬅️ ${this.getRegionName(mx - 1, my)}`);
-    this.drawCityGate(totalW - 160, midY - 50, `➡️ ${this.getRegionName(mx + 1, my)}`);
-    this.drawCityGate(midX - 80, 0, `⬆️ ${this.getRegionName(mx, my - 1)}`);
-    this.drawCityGate(midX - 80, totalH - 100, `⬇️ ${this.getRegionName(mx, my + 1)}`);
-
     const currentMapGrid = this.maps[this.currentMap];
     if (currentMapGrid) {
       currentMapGrid.forEach((col, indexX) => {
@@ -884,7 +995,28 @@ export class RpgGameEngine {
           const tileX = indexX * RpgGameEngine.TILE_WIDTH;
           const tileY = indexY * RpgGameEngine.TILE_HEIGHT;
 
-          if (item === "babyDown") {
+          if (item === "city_road") {
+            this.ctx.fillStyle = '#44403c'; // Stone road
+            this.ctx.fillRect(tileX, tileY, RpgGameEngine.TILE_WIDTH + 1, RpgGameEngine.TILE_HEIGHT + 1);
+          } else if (item === "city_plaza") {
+            this.ctx.fillStyle = '#78716c'; // Lighter stone plaza
+            this.ctx.fillRect(tileX, tileY, RpgGameEngine.TILE_WIDTH + 1, RpgGameEngine.TILE_HEIGHT + 1);
+            this.ctx.strokeStyle = '#57534e';
+            this.ctx.lineWidth = 2;
+            this.ctx.strokeRect(tileX, tileY, RpgGameEngine.TILE_WIDTH, RpgGameEngine.TILE_HEIGHT);
+          } else if (item === "city_house") {
+            // Draw a house
+            this.ctx.fillStyle = '#9ca3af';
+            this.ctx.fillRect(tileX, tileY + 40, RpgGameEngine.TILE_WIDTH, RpgGameEngine.TILE_HEIGHT - 40);
+            this.ctx.fillStyle = '#b91c1c'; // Red Roof
+            this.ctx.beginPath();
+            this.ctx.moveTo(tileX, tileY + 40);
+            this.ctx.lineTo(tileX + RpgGameEngine.TILE_WIDTH / 2, tileY);
+            this.ctx.lineTo(tileX + RpgGameEngine.TILE_WIDTH, tileY + 40);
+            this.ctx.fill();
+            this.ctx.fillStyle = '#1f2937'; // Door
+            this.ctx.fillRect(tileX + RpgGameEngine.TILE_WIDTH / 2 - 15, tileY + RpgGameEngine.TILE_HEIGHT - 40, 30, 40);
+          } else if (item === "babyDown") {
             const diffX = this.character.positionX - tileX;
             const diffY = this.character.positionY - tileY;
             if (diffX < 110 && diffX > -90 && diffY < 50 && diffY > -150) {
@@ -897,9 +1029,7 @@ export class RpgGameEngine {
               this.addXp(500);
               this.syncStats();
             }
-          }
-
-          if (item !== undefined && typeof item === "string") {
+          } else if (item !== undefined && typeof item === "string") {
             const spr = this.sprites[item];
             if (spr && spr.complete) {
               this.ctx.drawImage(
