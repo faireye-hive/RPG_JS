@@ -103,8 +103,14 @@ function softElbow(parent,material,side){
   const sleeve=new THREE.SkinnedMesh(softElbowGeometry(),material);
   sleeve.name='malha.flexível.cotovelo.'+side;
   parent.add(sleeve);
-  base.updateMatrixWorld(true);
-  sleeve.bind(new THREE.Skeleton([base,bend]));
+  // Bind in the *actual world rest pose*. Updating the bone directly with
+  // stale ancestor matrices offsets the skin a second time (above the head).
+  parent.updateWorldMatrix(true,true);
+  sleeve.updateWorldMatrix(true,false);
+  base.updateWorldMatrix(true,true);
+  sleeve.bind(new THREE.Skeleton([base,bend]),sleeve.matrixWorld.clone());
+  // The small sleeve remains visible even at high bend angles.
+  sleeve.frustumCulled=false;
   return {sleeve,bend};
 }
 
