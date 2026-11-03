@@ -93,6 +93,15 @@ function unload(key){
 async function decode(file){
   const buf=await file.arrayBuffer();
   if(file.name.toLowerCase().endsWith('.fbx')){
+    // Binary FBX 6100 from older Mixamo exports is incompatible with FBXLoader.
+    // Fail explicitly rather than showing a generic error or a broken character.
+    const sig=new TextDecoder('ascii').decode(new Uint8Array(buf,0,Math.min(18,buf.byteLength)));
+    if(sig.startsWith('Kaydara FBX Binary')&&buf.byteLength>=27){
+      const version=new DataView(buf).getUint32(23,true);
+      if(version<6400)throw Error(
+        'FBX '+version+' antigo: o Three.js exige FBX binário 6400+. Use o GLB sem texturas convertido nesta conversa.'
+      );
+    }
     const {FBXLoader}=await import('three/addons/loaders/FBXLoader.js');
     return new FBXLoader().parse(buf,'');
   }
