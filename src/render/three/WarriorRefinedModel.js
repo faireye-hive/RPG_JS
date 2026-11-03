@@ -242,13 +242,14 @@ export class WarriorRefinedModel extends WarriorSculptModel {
     const progress=attackPose>0?clamp(1-attackPose/.27,0,1):0;
     const attack=attackPose>0?Math.sin(PI*progress):0;
     // A separate gesture demonstrates articulation even with no weapon.
+    const manual=actor.manualRig||{};
     const gestureTarget=clamp(actor.demoGesture||0,0,1);
     this.poseGesture=blend(this.poseGesture,gestureTarget,10,step);
     const gesture=this.poseGesture;
     const wave=Math.sin(time*7.0);
     // Two cervical bones + head: nod, lateral inclination and gaze direction.
     this.cervical.rotation.x=.024*Math.sin(time*1.7)-.040*walk+gesture*.08;
-    this.cervical.rotation.y=.050*Math.sin(time*.9)+gesture*.12;
+    this.cervical.rotation.y=.050*Math.sin(time*.9)+gesture*.12+clamp(manual.neck||0,-1,1)*.72;
     this.cervical.rotation.z=.017*Math.sin(time*1.1)-walk*cadence*.02;
     this.neck.rotation.x=.027*Math.sin(time*2.1)-gesture*.06;
     this.neck.rotation.y=.065*Math.sin(time*1.03)+gesture*.08;
@@ -268,10 +269,11 @@ export class WarriorRefinedModel extends WarriorSculptModel {
       upper.rotation.x=-stepPhase*.34*walk-.48*attack*(side>0?1:0)-waving*.24;
       upper.rotation.y=side*(.07+.08*walk);
       upper.rotation.z=side*(.17+.05*walk)-.35*attack*(side>0?1:0)+
-        waving*1.06;
+        waving*1.06+(side>0?1.18*clamp(manual.shoulder||0,0,1):0);
       // Elbow bends naturally during walk, impact and raised-hand gesture.
       const walkFlex=Math.max(0,stepPhase)*walk*.20;
-      elbow.rotation.x=-.16-walkFlex-(side>0?.78*attack:0)-waving*.95;
+      elbow.rotation.x=-.16-walkFlex-(side>0?.78*attack:0)-waving*.95-
+        (side>0?1.08*clamp(manual.elbow||0,0,1):0);
       elbow.rotation.y=side*.035;
       elbow.rotation.z=side*(.025+.02*walk);
     }
@@ -282,7 +284,7 @@ export class WarriorRefinedModel extends WarriorSculptModel {
         .075*walk*Math.sin(this.phase+(right?0:PI));
       wrist.rotation.y=side*(.055+.10*raising);
       wrist.rotation.z=side*.02+(right?.33*attack:0)+
-        raising*.37*wave;
+        raising*.37*wave+(right?.75*clamp(manual.wrist||0,-1,1):0);
       // Palm can oppose the wrist, which was impossible in B.
       palm.rotation.x=.05+raising*.13+.08*Math.sin(time*1.3+side);
       palm.rotation.y=side*(.025+.11*raising);
@@ -291,7 +293,8 @@ export class WarriorRefinedModel extends WarriorSculptModel {
     for(const {side,knuckles} of this.cRig.fingers){
       const right=side>0;
       const grasp=clamp(.17+.5*attack*(right?1:0)+
-        .22*walk+ .19*(right?gesture:0)*(.5+.5*Math.sin(time*5)),0,1);
+        .22*walk+ .19*(right?gesture:0)*(.5+.5*Math.sin(time*5))+
+        (right?clamp(manual.fingers||0,0,1):0),0,1);
       knuckles.forEach(({base,distal},i)=>{
         // Alternating finger motion prevents a rigid "paddle hand".
         const curl=clamp(grasp+.07*Math.sin(time*3.2+i*.9+side),0,1);
