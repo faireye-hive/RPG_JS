@@ -31,7 +31,7 @@ export class Game {
     this.player={x:0,y:0,vx:0,vy:0,radius:16,hp:hero.hp,maxHp:hero.hp,
       speed:hero.speed,armor:hero.armor,might:hero.might,magnet:74,
       xp:0,nextXp:xpForLevel(1),level:1,classId:hero.id,facing:0,inv:0,attackPose:0};
-    this.elapsed=0;this.kills=0;this.spawnTimer=.7;this.lastPickupSound=-10;
+    this.frameDt=0;this.elapsed=0;this.kills=0;this.spawnTimer=.7;this.lastPickupSound=-10;
     this.bossFlags={first:false,second:false};
     this.enemies=[];this.drops=[];this.projectiles=[];this.effects=[];this.particles=[];this.floatTexts=[];
     this.upgrades={};this.weapons=[{id:hero.weapon,level:1,cooldown:.2}];
@@ -117,14 +117,14 @@ export class Game {
   frame(now){
     if(this.state!=='playing')return;
     const dt=Math.min(.05,Math.max(0,(now-this.lastTick)/1000));
-    this.lastTick=now;
+    this.lastTick=now;this.frameDt=dt;
     if(!this.paused)this.step(dt);
     if(this.state==='playing'){
       this.render();this.raf=requestAnimationFrame(this.frame);
     }
   }
   destroy(){
-    cancelAnimationFrame(this.raf);this.input.destroy();
+    cancelAnimationFrame(this.raf);this.input.destroy();this.renderer.destroy();
     window.removeEventListener('resize',this.resize);
     document.removeEventListener('visibilitychange',this.visibility);
   }

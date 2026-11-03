@@ -19,7 +19,7 @@ input[type=range]{accent-color:#dec28a;width:100%}
 .primary.secondary{margin-top:9px;border:1px solid #4c736a;background:#1d3b43;color:#d7e8df}
 .hint{font-size:10px;line-height:1.7;color:#809e9a;margin-top:20px}
 main{position:relative;min-width:0;background:radial-gradient(ellipse at 50% 55%,#295147,#0d1e2c)}
-#stage{display:block;width:100%;height:100dvh}
+#stage{display:block;width:100%;height:100dvh}#hero-3d{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}#hero-3d:active{cursor:grabbing}#hero-3d[hidden]{display:none}
 .tags{position:absolute;top:22px;left:22px;display:flex;gap:8px;pointer-events:none}
 .tags span{border:1px solid #659b8870;background:#0b1c28c9;color:#bcecd6;padding:8px 10px;border-radius:7px;font-weight:800;font-size:9px;letter-spacing:.09em}
 .caption{position:absolute;bottom:25px;left:50%;transform:translateX(-50%);font:20px Georgia,serif;white-space:nowrap;color:#f1d59e;text-shadow:0 2px 10px #000;pointer-events:none;text-align:center}
@@ -27,7 +27,7 @@ main{position:relative;min-width:0;background:radial-gradient(ellipse at 50% 55%
 @media(max-width:780px){.layout{display:block}aside{border-right:0;padding:15px 16px}
 .kicker{margin-top:10px}h1{font-size:29px;margin:5px 0}p{font-size:11px;line-height:1.4;margin:0 0 8px}
 hr{margin:12px 0}.control{margin:9px 0}.control label{margin-bottom:6px}.choices button{padding:7px 2px}
-.primary{padding:11px}.hint{display:none}main{min-height:440px}#stage{height:440px}
+.primary{padding:11px}.hint{display:none}main{min-height:440px}#stage{height:440px}#hero-3d{height:440px}
 .tags{top:10px;left:10px}.tags span{padding:6px;font-size:8px}
 .caption{font-size:15px;bottom:12px}}
 </style></head>
@@ -35,21 +35,27 @@ hr{margin:12px 0}.control{margin:9px 0}.control label{margin-bottom:6px}.choices
 <aside><a href="./index.html">← VOLTAR AO JOGO</a>
 <div class="kicker">✦ ATELIÊ DE ARTE PROCEDURAL</div>
 <h1>O <span>Guerreiro</span><br>do Éter</h1>
-<p>Rosto, armadura articulada, capa, escudo heráldico e espada rúnica. Ilustração desenhada em tempo real por JavaScript, sem PNG, SVG, texturas ou modelos externos.</p>
+<p>Rosto, armadura articulada, capa, escudo heráldico e espada rúnica. Modelo tridimensional gerado por JavaScript, com proporções esguias, armadura leve e articulações independentes. Aparência ilustrada por toon shading, câmera ortográfica e movimento real em 360°.</p>
 <hr>
 <div class="control"><label>ANIMAÇÃO</label>
 <div class="choices"><button class="active" data-motion="idle">Parado</button><button data-motion="walk">Andando</button><button data-motion="attack">Ataque</button></div></div>
 <div class="control"><label for="view">PERSPECTIVA</label>
-<select id="view"><option value="front">Frente</option><option value="back">Costas</option></select></div>
-<div class="control"><label for="zoom">ZOOM <output id="zoom-label">2.4×</output></label>
-<input type="range" id="zoom" min="1" max="3.8" step=".1" value="2.4"></div>
+<select id="view"><option value="front">Frente</option><option value="front-right">Frente-direita</option><option value="right">Direita</option>
+<option value="back-right">Trás-direita</option><option value="back">Costas</option>
+<option value="back-left">Trás-esquerda</option><option value="left">Esquerda</option>
+<option value="front-left">Frente-esquerda</option><option value="free">Giro livre (arrastar)</option></select></div>
+<div class="control"><label for="zoom">ZOOM <output id="zoom-label">1.1×</output></label>
+<input type="range" id="zoom" min=".5" max="2.3" step=".1" value="1.1"></div>
+<div class="control"><label for="armor">ARMADURA</label>
+<select id="armor"><option value="light">Leve — proteção discreta</option>
+<option value="cloth">Apenas roupa e couro</option></select></div>
 <div class="control"><label for="background">CENÁRIO</label><select id="background"><option value="world">Santuário procedural</option><option value="dark">Estúdio escuro</option><option value="light">Estúdio claro</option></select></div>
 <div class="control"><div class="choices"><button data-gear="full" class="active">Equipado</button><button data-gear="unarmed">Sem espada</button><button id="freeze">Ⅱ Pausar</button></div></div>
 <hr><button class="primary" id="export">✧ EXPORTAR PNG COM ALPHA</button>
 <button class="primary secondary" id="reset">RESTAURAR VISUALIZAÇÃO</button>
-<div class="hint">A imagem exportada é opcional: o jogo usa sempre o desenho feito pelo código de <strong>src/render/characters/Warrior.js</strong>.</div>
-</aside><main><canvas id="stage" aria-label="Prévia animada do guerreiro"></canvas>
-<div class="tags"><span>100% CODE-DRIVEN</span><span>CANVAS 2D</span></div>
-<div class="caption">Sentinela de Éter<small>GUERREIRO · ARMADURA RÚNICA</small></div>
+<div class="hint">Arraste o personagem para girar livremente. A espada e o escudo acompanham as mãos. A imagem exportada é opcional; a cena original é 3D procedurally gerada em <strong>src/render/three/WarriorModel.js</strong>.</div>
+</aside><main><canvas id="stage" aria-label="Cenário procedural do ateliê"></canvas><canvas id="hero-3d" aria-label="Guerreiro tridimensional interativo" hidden></canvas>
+<div class="tags"><span>3D PROCEDURAL</span><span id="studio-status">CARREGANDO WEBGL</span></div>
+<div class="caption">Sentinela de Éter<small>3D ORTOGRÁFICO · ANIMAÇÃO ESQUELÉTICA</small></div>
 </main></div>
 <script type="module" src="./src/studio/WarriorStudio.js"></script></body></html>
