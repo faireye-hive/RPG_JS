@@ -85,3 +85,10 @@ O herói `guardian` usa um modelo 3D próprio, sem GLB ou texturas. A geometria 
 `WarriorStage.js` cria iluminação com materiais toon e câmera ortográfica. Durante o jogo, `WarriorSpriteRenderer.js` renderiza somente um pequeno retrato WebGL RGBA por frame e `Renderer.js` compõe o resultado no mesmo Canvas 2D, na ordem por Y dos inimigos, mantendo a simulação intocada. A dependência `three` é compilada no Vite e carregada sob demanda; ao faltar WebGL ou o pacote, a arte vetorial anterior permanece como fallback.
 
 No ateliê `warrior-studio.html`, o 3D é renderizado em um Canvas WebGL transparente acima do cenário 2D. O usuário pode arrastar para girar, escolher 8 direções, animações, equipamentos, nível de armadura e exportar PNG com transparência. Para desempenho mobile, nunca instanciar um contexto WebGL por inimigo; utilizar um renderer/actor e resolução reduzida. Para vários heróis, considerar atlas de poses, instâncias e cache por combinação de equipamento.
+
+
+## Laboratório: novo Guerreiro B, somente modelagem
+
+O código do Modelo A em `WarriorModel.js` fica intacto. O **Modelo B não é retexturização do A**: `WarriorSculptModel.js` constrói um personagem separado com geometria de lofts anatômicos, curvas em volume, nariz com perfil, cabelo comprido em mechas, tecido em dobras e mãos com dedos. A estrutura hierárquica animável é independente, com nomes de articulação, `update()`, `getHierarchy()` e `dispose()`. Um único material `MeshStandardMaterial` cinza fosco, sem mapas de textura, cobre toda a modelagem do B.
+
+`warrior-compare.html` usa um único WebGL renderer para A e B, com câmera e iluminação iguais, e substitui apenas os materiais de A por cinza fosco para uma comparação visual imparcial. Permite vista lado a lado e individual, orientação por arraste, malha em wireframe, marcadores de juntas e exportação OBJ (apenas geometria) para Blender. O renderer no jogo segue exibindo A até haver escolha explícita do personagem preferido.
