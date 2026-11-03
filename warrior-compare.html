@@ -66,7 +66,17 @@ nav{margin-bottom:9px}.eyebrow{font-size:9px}h1{font-size:27px;margin:5px 0}
 .labels{top:45px}.model-label{font-size:10px;padding:8px}.model-label span{font-size:8px}
 .bottom{bottom:13px;font-size:10px}.badge{left:10px;top:10px;font-size:8px}
 }
-</style></head>
+</style><!-- Compatibility for GitHub Pages serving original sources without Vite.
+     Vite-built pages already bundle Three.js, so this map is unused. -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+  }
+}
+</script>
+</head>
 <body><div class="layout">
 <aside class="sidebar">
 <nav><a href="./index.html">← VOLTAR AO RPG</a><a href="./warrior-studio.html">ATELIÊ ORIGINAL ↗</a></nav>
