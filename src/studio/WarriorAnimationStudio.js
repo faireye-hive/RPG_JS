@@ -368,12 +368,19 @@ function init(){
  });
  editor.pose=Object.keys(editor.pose).length?editor.pose:sampleClip(selectedClip(),editor.time);
  viewer.setPose(editor.pose);
+ const unfinished=editor.dirty?clonePose(editor.pose):null;
  if(!viewer.bones.has(editor.selected))editor.selected='upperArm.R';
  wire();fillBoneList();refreshClips();viewer.select(editor.selected);
- scrub(editor.time);
+ if(unfinished){
+  editor.pose=unfinished;
+  viewer.setPose(unfinished);
+  editor.dirty=true;
+  updateTime();syncAxis();
+ }else{
+  scrub(editor.time);
+ }
  $('auto-key').checked=editor.autoKey;
  $('show-skeleton').checked=true;
- if(editor.dirty){editor.pose=clonePose(editor.pose);viewer.setPose(editor.pose)}
  store();
  raf=requestAnimationFrame(tick);
  window.addEventListener('pagehide',()=>{
