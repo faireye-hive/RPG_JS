@@ -56,3 +56,12 @@ A versão React/TypeScript e os PNG antigos permanecem no histórico Git e na br
 ## Próximas etapas
 
 Criar editor de armas, artes procedurais e biomas; equipamentos/inventário e atributos persistentes; mais chefes, classes e objetivos; segundo modo RPG de exploração e missões. Melhorar a performance de centenas de inimigos com spatial hash e cache de terreno.
+
+
+## Comparação de personagens — Modelo A × Modelo B
+
+A página [`warrior-compare.html`](warrior-compare.html) mantém o Guerreiro atual (Modelo A) e mostra uma **modelagem procedural completamente independente** (Modelo B). Os dois são vistos simultaneamente com o mesmo material cinza fosco e iluminação, sem texturas ou mapas. É possível inspecionar a silhueta frente, lado, três quartos e costas, caminhar, atacar, mostrar malha de triângulos, exibir articulações, salvar PNG transparente e baixar a geometria do Modelo B em OBJ. O jogo não foi alterado para utilizar o B antes da escolha visual.
+
+- `src/render/three/WarriorSculptModel.js`: escultura orgânica original (superfícies loft de anatomia, cabeça com maxilar, perfil nasal, olhos e lábios esculpidos, cabelo em mechas volumétricas, túnica com dobras em malha e mãos com dedos). Hierarquia independente, sem equipamentos ou armaduras.
+- `src/studio/WarriorCompare.js`: uma câmera ortográfica, um contexto WebGL e dois modelos exibidos no mesmo cenário neutro. Não cria um renderer por personagem.
+- `tests/warrior-sculpt.test.js`: geometria, limites, materiais sem mapas, juntas e animações verificadas automaticamente.
