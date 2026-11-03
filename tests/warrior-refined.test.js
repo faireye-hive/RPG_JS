@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import {WarriorSculptModel} from '../src/render/three/WarriorSculptModel.js';
-import {WarriorRefinedModel} from '../src/render/three/WarriorRefinedModel.js';
+import {WarriorRefinedModel,softElbowGeometry} from '../src/render/three/WarriorRefinedModel.js';
 
 function allMeshes(root){
   const meshes=[];root.traverse(obj=>{if(obj.isMesh)meshes.push(obj);});return meshes;
@@ -97,4 +97,33 @@ test('painel manual C altera somente articulações solicitadas e mantém a geom
   assert.ok(c.cervical.rotation.y>.35);
   assert.ok(Math.abs(c.cRig.shoulders.find(v=>v.side===-1).upper.rotation.z)<.4);
   c.dispose();
+});
+
+test('cotovelo C possui deformação contínua ponderada por dois ossos',()=>{
+  const geometry=softElbowGeometry();
+  const positions=geometry.getAttribute('position');
+  const weights=geometry.getAttribute('skinWeight');
+  const indices=geometry.getAttribute('skinIndex');
+  assert.equal(weights.count,positions.count);
+  assert.equal(indices.count,positions.count);
+  let foundBlended=false;
+  for(let i=0;i<weights.count;i++){
+    const a=weights.getX(i),b=weights.getY(i);
+    assert.ok(a>=0&&a<=1&&b>=0&&b<=1);
+    assert.ok(Math.abs(a+b-1)<1e-5);
+    if(a>.05&&a<.95)foundBlended=true;
+  }
+  assert.ok(foundBlended,'smooth weights must interpolate between upper and lower arms');
+  geometry.dispose();
+  const model=new WarriorRefinedModel();
+  assert.equal(model.cRig.elbowSkins.length,2);
+  for(const {sleeve,bend,elbow} of model.cRig.elbowSkins){
+    assert.ok(sleeve.isSkinnedMesh);
+    assert.equal(sleeve.skeleton.bones.length,2);
+    assert.equal(sleeve.material,model.material);
+  }
+  model.update({vx:120,vy:0,attackPose:.13},1,.04,{instant:true});
+  for(const {bend,elbow} of model.cRig.elbowSkins)
+    assert.ok(Math.abs(bend.rotation.x-elbow.rotation.x)<1e-10);
+  model.dispose();
 });
