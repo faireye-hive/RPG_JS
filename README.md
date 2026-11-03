@@ -65,3 +65,8 @@ A página [`warrior-compare.html`](warrior-compare.html) mantém o Guerreiro atu
 - `src/render/three/WarriorSculptModel.js`: escultura orgânica original (superfícies loft de anatomia, cabeça com maxilar, perfil nasal, olhos e lábios esculpidos, cabelo em mechas volumétricas, túnica com dobras em malha e mãos com dedos). Hierarquia independente, sem equipamentos ou armaduras.
 - `src/studio/WarriorCompare.js`: uma câmera ortográfica, um contexto WebGL e dois modelos exibidos no mesmo cenário neutro. Não cria um renderer por personagem.
 - `tests/warrior-sculpt.test.js`: geometria, limites, materiais sem mapas, juntas e animações verificadas automaticamente.
+
+
+### Modelo C — anatomia, pescoço e dedos
+
+O **Modelo C** (`src/render/three/WarriorRefinedModel.js`) parte do desenho e da geometria do B, mas substitui seus componentes rígidos: deltoide com superfícies orgânicas assimétricas, clavículas com pivôs próprios, cotovelos que flexionam durante caminhada/ataque/gestos, duas vértebras cervicais articuladas e punhos, palmas e todos os dedos com juntas independentes (incluindo o polegar). A malha mantém um único material cinza fosco, sem imagens, armadura ou normal maps. No comparador `warrior-compare.html`, escolha **B+C** ou a vista individual C, teste o gesto **Acenar (C)** e ligue **Mostrar articulações**. O jogo não muda até escolhermos o modelo vencedor.

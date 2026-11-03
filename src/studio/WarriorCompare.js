@@ -6,14 +6,15 @@
 import * as THREE from 'three';
 import { WarriorModel } from '../render/three/WarriorModel.js';
 import { WarriorSculptModel } from '../render/three/WarriorSculptModel.js';
+import { WarriorRefinedModel } from '../render/three/WarriorRefinedModel.js';
 
 const $=id=>document.getElementById(id);
 const canvas=$('comparison');
-const state={view:'both',motion:'idle',direction:0,zoom:1,paused:false,
+const state={view:'BC',motion:'idle',direction:0,zoom:1,paused:false,
   wire:false,joints:false,auto:false,drag:false};
 const actor={vx:0,vy:0,facing:Math.PI/2,attackPose:0,inv:0};
 const dpr=()=>Math.min(window.devicePixelRatio||1,1.75);
-let renderer,scene,camera,modelA,modelB,clayA,parts=[],jointMarkers=[];
+let renderer,scene,camera,modelA,modelB,modelC,clayA,parts=[],jointMarkers=[];
 let previousX=0,clock=0,last=0,frameHandle=0;
 const directions={front:0,frontRight:Math.PI/4,right:Math.PI/2,
   backRight:3*Math.PI/4,back:Math.PI,backLeft:-3*Math.PI/4,
@@ -42,6 +43,7 @@ function configure(){
   camera.lookAt(0,1.34,0);
   modelA=new WarriorModel({armor:'cloth',sword:false,shield:false});
   modelB=new WarriorSculptModel();
+  modelC=new WarriorRefinedModel();
   // Critical: the original mesh stays intact. Only the comparison stage
   // swaps its material for a single matte clay material.
   clayA=new THREE.MeshStandardMaterial({
@@ -50,8 +52,8 @@ function configure(){
   modelA.root.traverse(obj=>{
     if(obj.isMesh)obj.material=clayA;
   });
-  scene.add(modelA.root,modelB.root);
-  parts=[modelA,modelB];
+  scene.add(modelA.root,modelB.root,modelC.root);
+  parts=[modelA,modelB,modelC];
   for(const mod of parts){
     const markers=new THREE.Group();mod.root.add(markers);
     markers.visible=false;
@@ -69,19 +71,23 @@ function configure(){
   applyLayout();resize();
 }
 function applyLayout(){
-  if(!modelA||!modelB)return;
-  modelA.root.visible=state.view!=='B';
-  modelB.root.visible=state.view!=='A';
-  modelA.root.position.x=state.view==='both'?-0.93:0;
-  modelB.root.position.x=state.view==='both'?0.93:0;
-  $('label-a').hidden=state.view==='B';
-  $('label-b').hidden=state.view==='A';
-  $('labels').classList.toggle('solo',state.view!=='both');
-  $('label-a').textContent=state.view==='both'?'A · ATUAL':'A · ATUAL';
-  $('label-b').textContent=state.view==='both'?'B · NOVO':'B · NOVO';
+  if(!modelA||!modelB||!modelC)return;
+  const view=state.view;
+  modelA.root.visible=view==='ABC'||view==='A';
+  modelB.root.visible=view==='ABC'||view==='BC'||view==='B';
+  modelC.root.visible=view==='ABC'||view==='BC'||view==='C';
+  // The centerline and eye height match across all three silhouettes.
+  modelA.root.position.x=view==='ABC'?-1.55:0;
+  modelB.root.position.x=view==='ABC'?0:(view==='BC'?-.94:0);
+  modelC.root.position.x=view==='ABC'?1.55:(view==='BC'?.94:0);
+  for(const id of ['a','b','c']){
+    const model={a:modelA,b:modelB,c:modelC}[id];
+    $('label-'+id).hidden=!model.root.visible;
+  }
+  $('labels').classList.toggle('solo',view==='A'||view==='B'||view==='C');
   document.querySelectorAll('[data-model]').forEach(btn=>{
-    btn.classList.toggle('active',btn.dataset.model===state.view);
-    btn.setAttribute('aria-pressed',String(btn.dataset.model===state.view));
+    btn.classList.toggle('active',btn.dataset.model===view);
+    btn.setAttribute('aria-pressed',String(btn.dataset.model===view));
   });
   resize();
 }
@@ -94,7 +100,7 @@ function resize(){
   renderer.setSize(width,height,false);
   const aspect=width/height;
   // Side-by-side stays visible even on portrait phones. No stretching.
-  const minWidth=state.view==='both'?3.15:1.45;
+  const minWidth=state.view==='ABC'?5.02:state.view==='BC'?3.28:1.55;
   const h=Math.max(3.42,minWidth/aspect)/state.zoom;
   camera.left=-h*aspect/2;camera.right=h*aspect/2;
   camera.top=h/2;camera.bottom=-h/2;
@@ -103,6 +109,7 @@ function resize(){
 function refreshMaterials(){
   clayA.wireframe=state.wire;
   modelB.material.wireframe=state.wire;
+  modelC.material.wireframe=state.wire;
 }
 function rotation(angle){
   state.direction=angle;
@@ -119,6 +126,7 @@ function render(now){
   }
   actor.vx=state.motion==='walk'?180:0;
   actor.vy=state.motion==='walk'?30:0;
+  actor.demoGesture=state.motion==='gesture'?1:0;
   const swing=clock%1.15;
   actor.attackPose=state.motion==='attack'&&swing<.27?.27-swing:0;
   for(const mod of parts){
@@ -158,17 +166,20 @@ function saveImage(){
   a.download='comparacao-guerreiro-modelos-3d-sem-textura.png';
   document.body.appendChild(a);a.click();a.remove();
 }
-async function saveOBJ(){
-  const btn=$('export-obj'),label=btn.textContent;
+async function saveOBJ(which='C'){
+  const btn=$(which==='B'?'export-obj-b':'export-obj-c');
+  const label=btn.textContent;
   btn.disabled=true;btn.textContent='PREPARANDO OBJ...';
   try{
     const {OBJExporter}=await import('three/addons/exporters/OBJExporter.js');
-    const clone=modelB.root.clone(true);
-    // Reset exhibition offset for a centered local-space OBJ.
+    const source=which==='B'?modelB:modelC;
+    const clone=source.root.clone(true);
+    // Restore neutral local origin when exporting a posed rig.
     clone.position.set(0,0,0);
     clone.updateMatrixWorld(true);
     const data=new OBJExporter().parse(clone);
-    saveBlob(new Blob([data],{type:'text/plain;charset=utf-8'}),'guerreiro-modelo-b-sem-textura.obj');
+    saveBlob(new Blob([data],{type:'text/plain;charset=utf-8'}),
+      'guerreiro-modelo-'+which.toLowerCase()+'-sem-textura.obj');
   }catch(error){
     console.error(error);$('status').textContent='Não foi possível exportar OBJ.';
   }finally{btn.disabled=false;btn.textContent=label;}
@@ -197,9 +208,10 @@ function hookup(){
     e.currentTarget.textContent=state.paused?'▶ Continuar':'Ⅱ Pausar';
   });
   $('export-png').addEventListener('click',saveImage);
-  $('export-obj').addEventListener('click',saveOBJ);
+  $('export-obj-b').addEventListener('click',()=>saveOBJ('B'));
+  $('export-obj-c').addEventListener('click',()=>saveOBJ('C'));
   $('reset').addEventListener('click',()=>{
-    Object.assign(state,{view:'both',motion:'idle',direction:0,zoom:1,
+    Object.assign(state,{view:'BC',motion:'idle',direction:0,zoom:1,
       paused:false,wire:false,joints:false,auto:false,drag:false});
     clock=0;$('direction').value='front';$('zoom').value='1';
     $('zoom-out').textContent='1.0×';
@@ -229,7 +241,7 @@ function hookup(){
     for(const marker of jointMarkers){
       marker.dot.geometry.dispose();marker.dot.material.dispose();
     }
-    modelA?.dispose();modelB?.dispose();clayA?.dispose();renderer?.dispose();
+    modelA?.dispose();modelB?.dispose();modelC?.dispose();clayA?.dispose();renderer?.dispose();
   },{once:true});
 }
 function clampZoom(v){return Math.max(.65,Math.min(1.8,Math.round(v*10)/10));}
