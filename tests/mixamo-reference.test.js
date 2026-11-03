@@ -19,6 +19,23 @@ test('FBX studio is in Vite bundle and supports raw Pages imports',()=>{
 test('legacy FBX 6100 requires GLB conversion before browser import',()=>{
   const html=fs.readFileSync('mixamo-reference-studio.html','utf8');
   assert.ok(html.includes('FBX 6100'));
-  assert.ok(html.includes('character_sem_texturas.glb'));
-  assert.ok(html.includes('character2_sem_texturas.glb'));
+  assert.ok(html.includes('Maria_caminhando_sem_texturas.glb'));
+  assert.ok(html.includes('Kachujin_caminhando_sem_texturas.glb'));
+  // Basic GLB without an animation is still an accepted input file.
+
+});
+
+test('embedded Walking animation is played through AnimationMixer rather than fake walk',()=>{
+  const js=fs.readFileSync('src/studio/MixamoReferenceStudio.js','utf8');
+  assert.match(js,/asset\.animations/);
+  assert.match(js,/new THREE\.AnimationMixer\(obj\)/);
+  assert.match(js,/mixer\.clipAction\(walkClip\)/);
+  assert.match(js,/THREE\.LoopRepeat/);
+  assert.match(js,/s\.mixer\.update\(dt\*stage\.speed\)/);
+  assert.match(js,/s\.walkAction\.stop\(\)/);
+  const html=fs.readFileSync('mixamo-reference-studio.html','utf8');
+  assert.ok(html.includes('Caminhar (Mixamo)'));
+  assert.ok(html.includes('id="speed"'));
+  assert.ok(html.includes('Maria_caminhando_sem_texturas.glb'));
+  assert.ok(html.includes('Kachujin_caminhando_sem_texturas.glb'));
 });
