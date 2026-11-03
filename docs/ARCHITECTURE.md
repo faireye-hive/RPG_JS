@@ -107,3 +107,8 @@ A região do cotovelo no C possui `softElbowGeometry()`, uma malha com `skinInde
 src/studio/MixamoReferenceStudio.js lê FBX/GLB com File.arrayBuffer() em memória, substitui os materiais por uma argila neutra e mantém os ossos e pesos originais do SkinnedMesh. Manipula as juntas pelo nome Mixamo para demonstrar caminhada, gesto e flexão dos dedos. O usuário escolhe os arquivos localmente; eles não são hospedados no Pages nem no repositório. O visualizador tem entrada multipágina no vite.config.js e importmap de compatibilidade para publicação bruta.
 
 Para integrar um dos personagens ao jogo, primeiro avaliar direitos de redistribuição, escolher visualmente, criar animações e validar desempenho mobile. Modelos A/B/C permanecem intactos.
+
+
+## Editor de Animações C: rig e JSON
+
+WarriorAnimationData.js implementa serialização do projeto de animação, interpolação angular pelo menor arco e validação do JSON com até 32 clipes. WarriorRigViewport.js cria marcadores do esqueleto C, permite selecionar juntas por clique, rotacionar por TransformControls e orbitar por OrbitControls. Usa as quaternions de construção como descanso, captura offsets de rotação Euler XYZ em graus e sincroniza os ossos de deformação da região do cotovelo. WarriorAnimationStudio.js organiza seleção, timeline, autokey, reprodução, importação/exportação JSON e localStorage. Interpolação angular é adequada para movimentos moderados; para ângulos extremos no gameplay, migrar a amostragem para slerp de quaternions. O editor não muda as animações do personagem que já aparece no jogo. Após o usuário exportar e enviar o JSON, podemos implementar um player na cena jogável.
