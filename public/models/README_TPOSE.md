@@ -14,3 +14,7 @@ Para regenerar após alterar o Guerreiro C:
 O OBJ contém uma única entidade OBJ, mas a modelagem procedural ainda tem
 superfícies não soldadas. O autorig Mixamo não é garantido.
 A animação de parado do editor não é aplicada à T-pose.
+
+Versão para teste de autorig: guerreiro-c-tpose-unificado.obj ou .zip;
+o script Python scripts/unify-warrior-c-tpose.py une os volumes por voxelização.
+Esse arquivo é uma malha única e fechada, mas perde parte dos detalhes finos.
