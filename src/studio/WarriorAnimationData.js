@@ -1,3 +1,4 @@
+import {USER_IDLE_FRAMES} from './WarriorCUserIdle.js';
 /**
  * Editable keyframe project for Crônicas do Éter — procedural Warrior C.
  * Pure data model: runs in the browser or Node without WebGL.
@@ -132,11 +133,8 @@ function preset(id,name,duration,loop,frames){
 }
 export function createStarterProject(){
   // Names match WarriorRefinedModel.nodes (relative rotations, degrees).
-  const idle=preset('idle','Parado / respiração',2,true,[
-    [0,poseSet([['spine',[0,0,0]],['cervical.lower',[0,0,0]]])],
-    [1,poseSet([['spine',[2,0,0]],['cervical.lower',[-2,0,0]],['upperArm.L',[0,0,-2]],['upperArm.R',[0,0,2]]])],
-    [2,poseSet([['spine',[0,0,0]],['cervical.lower',[0,0,0]]])]
-  ]);
+  // Exact keyframes from the user's exported idle, not a regenerated guess.
+  const idle=preset('idle','Parado / respiração',2,true,USER_IDLE_FRAMES);
   const walk=preset('walk','Caminhar',.8,true,[
     [0,poseSet([['upperLeg.L',[29,0,0]],['upperLeg.R',[-29,0,0]],['lowerLeg.R',[20,0,0]],['upperArm.L',[-23,0,0]],['upperArm.R',[23,0,0]],['spine',[2,0,0]]])],
     [.2,poseSet([['upperLeg.L',[0,0,0]],['upperLeg.R',[0,0,0]],['lowerLeg.L',[29,0,0]],['lowerLeg.R',[9,0,0]],['pelvis',[0,0,2]]])],

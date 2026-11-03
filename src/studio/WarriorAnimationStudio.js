@@ -330,6 +330,22 @@ function wire(){
  });
  $('clip-length').addEventListener('change',e=>setDuration(e.target.value));
  $('clip-loop').addEventListener('change',e=>{selectedClip().loop=e.target.checked;store()});
+ $('export-tpose-obj').addEventListener('click',async()=>{
+  const button=$('export-tpose-obj');
+  button.disabled=true;
+  try{
+   const {buildWarriorCTposeOBJ}=await import('./WarriorCTposeExport.js');
+   const {obj,stats}=buildWarriorCTposeOBJ();
+   const url=URL.createObjectURL(new Blob([obj],{type:'model/obj'}));
+   const a=document.createElement('a');
+   a.href=url;a.download='guerreiro-c-tpose.obj';
+   document.body.appendChild(a);a.click();a.remove();
+   setTimeout(()=>URL.revokeObjectURL(url),30000);
+   message('✓ OBJ em T-pose exportado: '+stats.faces+' triângulos.');
+  }catch(error){
+   console.error(error);message('Não foi possível exportar o modelo: '+error.message,true);
+  }finally{button.disabled=false}
+ });
  $('export-json').addEventListener('click',exportJSON);
  $('import-json').addEventListener('change',e=>importJSON(e.target.files?.[0]));
  $('screenshot').addEventListener('click',()=>{
