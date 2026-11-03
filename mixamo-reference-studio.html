@@ -63,20 +63,20 @@ nav{margin-bottom:10px}h1{font-size:27px;margin:7px 0}p{font-size:11px}
 <aside>
 <nav><a href="./index.html">← VOLTAR AO RPG</a><a href="./warrior-compare.html">COMPARAR A/B/C ↗</a></nav>
 <div class="kicker">✧ LABORATÓRIO DE ANATOMIA REAL</div>
-<h1>Malha <em>rigada</em><br>sem texturas</h1>
-<p><b>Use os GLB convertidos nesta conversa.</b> Seus FBX originais são versão 6100, incompatível com o FBXLoader atual. Os GLB preservam <b>ossos Mixamo e pesos reais da malha</b>, sem texturas e sem membros feitos de tubos.</p>
+<h1>Caminhada <em>Mixamo</em><br>com rig real</h1>
+<p><b>Use os novos GLB com animação Walking embutida.</b> A caminhada é reproduzida com os <b>ossos Mixamo e pesos reais da malha</b>. Os modelos continuam sem texturas. FBX antigos 6100 precisam de conversão.</p>
 <div id="drop-maria" class="drop"><strong>MODELO 1 — MARIA</strong>
 <input id="file-maria" type="file" accept=".fbx,.glb" aria-label="Abrir arquivo character.fbx ou GLB">
-<div id="status-maria" class="status">Selecione character_sem_texturas.glb</div>
+<div id="status-maria" class="status">Selecione Maria_caminhando_sem_texturas.glb</div>
 <p id="details-maria" class="details">GLB recomendado • FBX 6100 não suportado</p></div>
 <div id="drop-kachujin" class="drop"><strong>MODELO 2 — KACHUJIN</strong>
 <input id="file-kachujin" type="file" accept=".fbx,.glb" aria-label="Abrir arquivo character2.fbx ou GLB">
-<div id="status-kachujin" class="status">Selecione character2_sem_texturas.glb</div>
+<div id="status-kachujin" class="status">Selecione Kachujin_caminhando_sem_texturas.glb</div>
 <p id="details-kachujin" class="details">GLB recomendado • FBX 6100 não suportado</p></div>
-<p class="note">Os GLB são lidos somente no seu navegador e não enviados ao servidor. FBX binário 6400+ também é aceito; os FBX 6100 fornecidos exigem a conversão prévia.</p>
+<p class="note">Carregue os GLB de caminhada que entreguei na conversa. Os arquivos são lidos apenas no seu navegador; nada é enviado ao servidor. Os controles de juntas funcionam nos modos Parado e Acenar.</p>
 <div class="field"><label>ANIMAÇÃO PARA INSPEÇÃO</label><div class="choice">
 <button data-motion="idle" class="active">Parado</button>
-<button data-motion="walk">Caminhar</button>
+<button data-motion="walk">Caminhar (Mixamo)</button>
 <button data-motion="wave">Acenar</button>
 </div></div>
 <div class="field"><label for="angle">PERSPECTIVA</label>
@@ -87,6 +87,8 @@ nav{margin-bottom:10px}h1{font-size:27px;margin:7px 0}p{font-size:11px}
 <option value="frontLeft">3/4 à esquerda</option><option value="free">Giro livre</option></select></div>
 <div class="field"><label for="zoom">ZOOM <output class="output" id="zoom-label">1.0×</output></label>
 <input id="zoom" type="range" min=".65" max="1.75" step=".1" value="1"></div>
+<div class="field"><label for="speed">VELOCIDADE DA ANIMAÇÃO <output class="output" id="speed-label">1.00×</output></label>
+<input id="speed" type="range" min=".25" max="2" step=".05" value="1"></div>
 <label class="check">Girar automaticamente <input id="auto" type="checkbox"></label>
 <label class="check">Mostrar esqueleto <input id="bones" type="checkbox"></label>
 <label class="check">Mostrar triângulos <input id="wire" type="checkbox"></label>
@@ -108,7 +110,7 @@ nav{margin-bottom:10px}h1{font-size:27px;margin:7px 0}p{font-size:11px}
 </aside>
 <main class="stage"><canvas id="view" aria-label="Modelos FBX e GLB com rig Mixamo"></canvas>
 <div class="badge">MALHA ORIGINAL · SKINNING · MATERIAL NEUTRO</div>
-<div id="welcome">Escolha os GLB convertidos nesta conversa para visualizar os dois modelos.</div>
+<div id="welcome">Escolha os novos GLB com Walking embutido para ver a caminhada Mixamo real.</div>
 </main></div>
 <script type="module" src="./src/studio/MixamoReferenceStudio.js"></script>
 </body></html>

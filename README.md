@@ -94,3 +94,10 @@ Os arquivos enviados em 2026-11-03 eram FBX binários v6100 com deformadores Ski
 FBXLoader do Three.js só suporta FBX binário >= 6400; os arquivos character.fbx e character2.fbx são FBX binário 6100 e precisam ser convertidos antes. As versões geradas nesta conversa são character_sem_texturas.glb (65 ossos, 2,3 MB) e character2_sem_texturas.glb (75 ossos, 1,4 MB). Ambas contêm um material cinza neutro e skins Mixamo com pesos normalizados e sem imagens; nenhuma animação pronta estava no arquivo.
 
 O visualizador mostra um erro claro quando alguém tenta selecionar um FBX antigo 6100. FBX moderno 6400+ continua funcionando pelo FBXLoader.
+
+
+### Walking.fbx — caminhada Mixamo integrada
+
+O arquivo `Walking.fbx` fornecido pelo usuário é um FBX ASCII 7700 contendo a animação Mixamo `mixamo.com`: 65 ossos, 315 curvas de animação, 30 quadros (30 FPS) e duração original de 0,967 s. Foi convertido e incorporado diretamente à versão GLB sem texturas de cada personagem. Cada GLB exportado possui **1 animação Walking em ciclo de 1 segundo**, 53 canais ativos (52 rotações de ossos + translação vertical do quadril), sem deslocamento horizontal da raiz e sem imagem de textura. O arquivo enviado do usuário e os novos GLB não são redistribuídos no repositório.
+
+O laboratório de FBX/GLB utiliza `GLTFLoader.parse(...)` para recuperar também `asset.animations`, escolhe o clipe Walking e reproduz com `THREE.AnimationMixer` e `LoopRepeat` no botão **Caminhar (Mixamo)**. Modelos sem animações embutidas continuam usando a pose experimental anterior. Há controle de velocidade da animação (0,25× a 2×), pausa, zoom e esqueleto. A animação é importada diretamente do FBX do usuário, sem subir o arquivo ao site.

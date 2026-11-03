@@ -2,11 +2,16 @@ import * as THREE from 'three';
 // Loads local FBX or GLB in the browser. Uploaded content never leaves the device.
 const $=id=>document.getElementById(id);
 const canvas=$('view');
-const stage={yaw:0,zoom:1,playing:true,auto:false,time:0,motion:'idle',
+const stage={yaw:0,zoom:1,speed:1,playing:true,auto:false,time:0,motion:'idle',
   joints:{neck:0,shoulder:0,elbow:0,wrist:0,fingers:0}};
 const slots={maria:null,kachujin:null};
 let scene,camera,renderer,clay,previous=0,drag=false,startX=0,frame=0;
 const norm=name=>name.replace(/^mixamorig[:_]?/i,'');
+function setMotion(motion){
+  stage.motion=motion;
+  document.querySelectorAll('[data-motion]').forEach(b=>
+    b.classList.toggle('active',b.dataset.motion===motion));
+}
 function init(){
   renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,preserveDrawingBuffer:true});
   renderer.setClearColor(0,0);renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -27,10 +32,8 @@ function init(){
       e.preventDefault();target.classList.remove('over');load(key,e.dataTransfer?.files?.[0]);
     });
   }
-  document.querySelectorAll('[data-motion]').forEach(b=>b.addEventListener('click',()=>{
-    stage.motion=b.dataset.motion;
-    document.querySelectorAll('[data-motion]').forEach(x=>x.classList.toggle('active',b===x));
-  }));
+  document.querySelectorAll('[data-motion]').forEach(b=>b.addEventListener('click',()=>
+    setMotion(b.dataset.motion)));
   $('angle').addEventListener('change',e=>{
     const map={front:0,frontRight:Math.PI/4,right:Math.PI/2,
       backRight:3*Math.PI/4,back:Math.PI,backLeft:-3*Math.PI/4,
@@ -39,6 +42,10 @@ function init(){
   });
   $('zoom').addEventListener('input',e=>{
     stage.zoom=Number(e.target.value);$('zoom-label').textContent=stage.zoom.toFixed(1)+'×';resize();
+  });
+  $('speed').addEventListener('input',e=>{
+    stage.speed=Number(e.target.value);
+    $('speed-label').textContent=stage.speed.toFixed(2)+'×';
   });
   $('auto').addEventListener('change',e=>stage.auto=e.target.checked);
   $('wire').addEventListener('change',e=>clay.wireframe=e.target.checked);
@@ -83,6 +90,7 @@ function resize(){
 }
 function unload(key){
   const s=slots[key];if(!s)return;
+  if(s.mixer){s.mixer.stopAllAction();s.mixer.uncacheRoot(s.obj);}
   if(s.helper){scene.remove(s.helper);s.helper.geometry.dispose();s.helper.material.dispose()}
   scene.remove(s.root);
   const geos=new Set();
@@ -103,11 +111,13 @@ async function decode(file){
       );
     }
     const {FBXLoader}=await import('three/addons/loaders/FBXLoader.js');
-    return new FBXLoader().parse(buf,'');
+    const object=new FBXLoader().parse(buf,'');
+    return {object,clips:object.animations||[]};
   }
   if(file.name.toLowerCase().endsWith('.glb')){
     const {GLTFLoader}=await import('three/addons/loaders/GLTFLoader.js');
-    return (await new Promise((ok,fail)=>new GLTFLoader().parse(buf,'',ok,fail))).scene;
+    const asset=await new Promise((ok,fail)=>new GLTFLoader().parse(buf,'',ok,fail));
+    return {object:asset.scene,clips:asset.animations||[]};
   }
   throw Error('Selecione um arquivo .fbx ou .glb');
 }
@@ -118,7 +128,7 @@ async function load(key,file){
   input.disabled=true;
   try{
     if(file.size>80*1024*1024)throw Error('Arquivo acima de 80 MB');
-    const obj=await decode(file);
+    const {object:obj,clips}=await decode(file);
     // Keep the original Mixamo skinning, but discard painted materials.
     const previousMats=new Set();
     obj.traverse(o=>{
@@ -144,11 +154,19 @@ async function load(key,file){
     const helper=new THREE.SkeletonHelper(obj);
     helper.visible=$('bones').checked;helper.material.depthTest=false;
     helper.material.transparent=true;helper.material.opacity=.85;scene.add(helper);
-    slots[key]={root,obj,bones,rest,positions,helper};
+    // Built-in Walk clips are baked into the two supplied clay-only GLBs.
+    // Use Three.AnimationMixer instead of the previous procedural limb swings.
+    const walkClip=clips.find(clip=>/walk|andand|caminh/i.test(clip.name))||clips[0]||null;
+    const mixer=walkClip?new THREE.AnimationMixer(obj):null;
+    const walkAction=mixer?mixer.clipAction(walkClip):null;
+    if(walkAction)walkAction.setLoop(THREE.LoopRepeat,Infinity);
+    slots[key]={root,obj,bones,rest,positions,helper,mixer,walkAction,activeClip:false};
     const polys=(function(){let n=0;obj.traverse(o=>{if(o.isMesh)n+=
       o.geometry.index?o.geometry.index.count/3:o.geometry.attributes.position.count/3});return n})();
     label.textContent=file.name;
-    $('details-'+key).textContent=bones.size+' ossos • '+Math.round(polys).toLocaleString('pt-BR')+' triângulos';
+    $('details-'+key).textContent=bones.size+' ossos • '+Math.round(polys).toLocaleString('pt-BR')+
+      ' triângulos'+(walkClip?' • caminhada Mixamo ('+walkClip.duration.toFixed(2)+' s)':' • sem animação interna');
+    if(walkClip)setMotion('walk');
     $('welcome').hidden=true;
     slots.maria?.root.position.set(slots.kachujin?-1.3:0,0,0);
     slots.kachujin?.root.position.set(slots.maria?1.3:0,0,0);
@@ -186,10 +204,21 @@ function apply(s,t){
 }
 function tick(ms){
   const dt=Math.min(.05,Math.max(0,(ms-(previous||ms))/1000));previous=ms;
-  if(stage.playing){stage.time+=dt;if(stage.auto){stage.yaw+=dt*.6;$('angle').value='free'}}
+  if(stage.playing){
+    stage.time+=dt*stage.speed;
+    if(stage.auto){stage.yaw+=dt*.6;$('angle').value='free'}
+  }
   for(const s of Object.values(slots)){
     if(!s)continue;
-    if(stage.playing)apply(s,stage.time);
+    if(stage.motion==='walk'&&s.walkAction){
+      // Every loop is played by the imported animation's real bone tracks.
+      if(!s.activeClip){s.walkAction.reset().play();s.activeClip=true}
+      if(stage.playing)s.mixer.update(dt*stage.speed);
+    }else{
+      // On exit, stop the Mixamo animation and return to manual/procedural poses.
+      if(s.activeClip){s.walkAction.stop();s.activeClip=false}
+      if(stage.playing)apply(s,stage.time);
+    }
     s.root.rotation.y=stage.yaw;
   }
   renderer.render(scene,camera);frame=requestAnimationFrame(tick);
