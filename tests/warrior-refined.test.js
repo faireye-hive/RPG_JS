@@ -72,6 +72,19 @@ test('walking and attack preserve plausible slim footprint and finite transforms
   },j*.21,.04,{instant:true});
   const bounds=new THREE.Box3().setFromObject(c.root);
   const size=bounds.getSize(new THREE.Vector3());
+  if(size.y>=3.2){
+    const problemMeshes=[];
+    c.root.traverse(o=>{
+      if(!o.isMesh)return;
+      const b=new THREE.Box3().setFromObject(o);
+      if(b.min.y<-.3||b.max.y>3.05)problemMeshes.push({
+        name:o.name,skinned:Boolean(o.isSkinnedMesh),min:b.min.y,max:b.max.y
+      });
+    });
+    console.log('Excessive bounds:',JSON.stringify({
+      min:bounds.min.toArray(),max:bounds.max.toArray(),problemMeshes
+    }));
+  }
   assert.ok(size.y>2.1&&size.y<3.2,JSON.stringify(size));
   assert.ok(size.x>0.5&&size.x<1.8,JSON.stringify(size));
   c.root.traverse(o=>{
