@@ -8,7 +8,11 @@ test('Modelo B é uma geometria procedural nova, sem mapas de textura',()=>{
   const modelA=new WarriorModel({armor:'cloth',sword:false,shield:false});
   const modelB=new WarriorSculptModel();
   assert.notEqual(modelA.root,modelB.root);
-  assert.notEqual(modelA.head.geometry,modelB.head.geometry);
+  let firstGeometryA=null,firstGeometryB=null;
+  modelA.root.traverse(o=>{if(o.isMesh&&!firstGeometryA)firstGeometryA=o.geometry;});
+  modelB.root.traverse(o=>{if(o.isMesh&&!firstGeometryB)firstGeometryB=o.geometry;});
+  assert.ok(firstGeometryA&&firstGeometryB);
+  assert.notEqual(firstGeometryA,firstGeometryB);
   const meshes=[];
   modelB.root.traverse(obj=>{if(obj.isMesh)meshes.push(obj);});
   assert.ok(meshes.length>=50,'B deve conter detalhes 3D suficientes');
