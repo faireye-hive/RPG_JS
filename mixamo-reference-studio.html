@@ -66,14 +66,16 @@ nav{margin-bottom:10px}h1{font-size:27px;margin:7px 0}p{font-size:11px}
 <h1>Caminhada <em>Mixamo</em><br>com rig real</h1>
 <p><b>Use os novos GLB com animação Walking embutida.</b> A caminhada é reproduzida com os <b>ossos Mixamo e pesos reais da malha</b>. Os modelos continuam sem texturas. FBX antigos 6100 precisam de conversão.</p>
 <div id="drop-maria" class="drop"><strong>MODELO 1 — MARIA</strong>
+<button id="github-maria" class="action alt" type="button">↻ CARREGAR MARIA DO GITHUB</button>
 <input id="file-maria" type="file" accept=".fbx,.glb" aria-label="Abrir arquivo character.fbx ou GLB">
 <div id="status-maria" class="status">Selecione Maria_caminhando_sem_texturas.glb</div>
 <p id="details-maria" class="details">GLB recomendado • FBX 6100 não suportado</p></div>
 <div id="drop-kachujin" class="drop"><strong>MODELO 2 — KACHUJIN</strong>
+<button id="github-kachujin" class="action alt" type="button">↻ CARREGAR KACHUJIN DO GITHUB</button>
 <input id="file-kachujin" type="file" accept=".fbx,.glb" aria-label="Abrir arquivo character2.fbx ou GLB">
 <div id="status-kachujin" class="status">Selecione Kachujin_caminhando_sem_texturas.glb</div>
 <p id="details-kachujin" class="details">GLB recomendado • FBX 6100 não suportado</p></div>
-<p class="note">Carregue os GLB de caminhada que entreguei na conversa. Os arquivos são lidos apenas no seu navegador; nada é enviado ao servidor. Os controles de juntas funcionam nos modos Parado e Acenar.</p>
+<p class="note">O laboratório tenta carregar os modelos do GitHub Pages automaticamente. Até que os GLB sejam adicionados em public/models, use os arquivos locais. Seus arquivos selecionados não são enviados pelo visualizador.</p>
 <div class="field"><label>ANIMAÇÃO PARA INSPEÇÃO</label><div class="choice">
 <button data-motion="idle" class="active">Parado</button>
 <button data-motion="walk">Caminhar (Mixamo)</button>
@@ -110,7 +112,7 @@ nav{margin-bottom:10px}h1{font-size:27px;margin:7px 0}p{font-size:11px}
 </aside>
 <main class="stage"><canvas id="view" aria-label="Modelos FBX e GLB com rig Mixamo"></canvas>
 <div class="badge">MALHA ORIGINAL · SKINNING · MATERIAL NEUTRO</div>
-<div id="welcome">Escolha os novos GLB com Walking embutido para ver a caminhada Mixamo real.</div>
+<div id="welcome">Tentando carregar Maria e Kachujin do GitHub Pages…</div>
 </main></div>
 <script type="module" src="./src/studio/MixamoReferenceStudio.js"></script>
 </body></html>

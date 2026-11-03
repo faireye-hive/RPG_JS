@@ -101,3 +101,10 @@ O visualizador mostra um erro claro quando alguém tenta selecionar um FBX antig
 O arquivo `Walking.fbx` fornecido pelo usuário é um FBX ASCII 7700 contendo a animação Mixamo `mixamo.com`: 65 ossos, 315 curvas de animação, 30 quadros (30 FPS) e duração original de 0,967 s. Foi convertido e incorporado diretamente à versão GLB sem texturas de cada personagem. Cada GLB exportado possui **1 animação Walking em ciclo de 1 segundo**, 53 canais ativos (52 rotações de ossos + translação vertical do quadril), sem deslocamento horizontal da raiz e sem imagem de textura. O arquivo enviado do usuário e os novos GLB não são redistribuídos no repositório.
 
 O laboratório de FBX/GLB utiliza `GLTFLoader.parse(...)` para recuperar também `asset.animations`, escolhe o clipe Walking e reproduz com `THREE.AnimationMixer` e `LoopRepeat` no botão **Caminhar (Mixamo)**. Modelos sem animações embutidas continuam usando a pose experimental anterior. Há controle de velocidade da animação (0,25× a 2×), pausa, zoom e esqueleto. A animação é importada diretamente do FBX do usuário, sem subir o arquivo ao site.
+
+
+### Publicar os GLB no GitHub Pages
+
+O usuário autorizou hospedar os modelos no repositório. Coloque **os dois arquivos binários de caminhada** em `public/models/`, usando exatamente os nomes `Maria_caminhando_sem_texturas.glb` e `Kachujin_caminhando_sem_texturas.glb`. O Vite copia automaticamente `public/models/` para `dist/models/`. Em publicação direta da branch (sem Vite), os arquivos ficam no caminho `public/models/`. O laboratório `mixamo-reference-studio.html` procura os dois caminhos, valida o cabeçalho GLB e inicia os modelos automaticamente; também exibe botões de recarga e mantém o carregamento local como alternativa.
+
+**Importante:** não comitar um arquivo de texto renomeado para `.glb` nem um ponteiro LFS sem configurar a distribuição. Os arquivos precisam estar no Git e ser acessíveis por HTTP como bytes GLB genuínos. São pequenos (cerca de 2,35 MB e 1,46 MB), muito abaixo do limite normal de 100 MB por arquivo do GitHub. A biblioteca contém animações Mixamo e não precisa de texturas.
