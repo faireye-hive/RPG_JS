@@ -7,6 +7,48 @@ const stage={yaw:0,zoom:1,speed:1,playing:true,auto:false,time:0,motion:'idle',
 const slots={maria:null,kachujin:null};
 let scene,camera,renderer,clay,previous=0,drag=false,startX=0,frame=0;
 const norm=name=>name.replace(/^mixamorig[:_]?/i,'');
+export const REPO_MODELS=Object.freeze({
+  maria:'Maria_caminhando_sem_texturas.glb',
+  kachujin:'Kachujin_caminhando_sem_texturas.glb'
+});
+const repoAssetPaths=(name)=>['./models/'+name,'./public/models/'+name];
+/** Avoid accepting the repository's HTML 404 fallback as a GLB file. */
+export function validGLBHeader(bytes){
+  if(bytes.byteLength<20)return false;
+  const dv=new DataView(bytes);
+  return dv.getUint32(0,true)===0x46546c67&&dv.getUint32(4,true)===2&&
+    dv.getUint32(8,true)===bytes.byteLength;
+}
+/**
+ * GitHub Actions /dist copies public/models into /models.
+ * Raw branch-source Pages serves the same assets under /public/models.
+ * The dual lookup works in either deployment mode.
+ */
+async function loadFromGitHub(key,{silent=false}={}){
+  const fileName=REPO_MODELS[key];
+  if(!fileName)return false;
+  for(const relativeUrl of repoAssetPaths(fileName)){
+    try{
+      const resp=await fetch(relativeUrl,{cache:'no-cache'});
+      if(!resp.ok)continue;
+      const bytes=await resp.arrayBuffer();
+      if(!validGLBHeader(bytes))continue;
+      await load(key,new File([bytes],fileName,{type:'model/gltf-binary'}));
+      if(slots[key])return true;
+    }catch(error){
+      if(!silent)console.warn('Modelo indisponível no Pages:',relativeUrl,error);
+    }
+  }
+  if(!silent)$('status-'+key).textContent='Arquivo ainda não hospedado. Selecione o GLB local.';
+  return false;
+}
+async function autoLoadRepoModels(){
+  const results=await Promise.allSettled(Object.keys(REPO_MODELS).map(key=>
+    loadFromGitHub(key,{silent:true})));
+  if(!results.some(x=>x.status==='fulfilled'&&x.value)){
+    $('welcome').textContent='Os modelos ainda não foram adicionados ao repositório. Selecione os GLB à esquerda ou envie-os à pasta public/models do GitHub.';
+  }
+}
 function setMotion(motion){
   stage.motion=motion;
   document.querySelectorAll('[data-motion]').forEach(b=>
@@ -23,6 +65,7 @@ function init(){
   camera=new THREE.OrthographicCamera(-2,2,2,-2,.1,100);
   camera.position.set(0,3.3,8.5);camera.lookAt(0,1.2,0);
   for(const key of ['maria','kachujin']){
+    $('github-'+key).addEventListener('click',()=>loadFromGitHub(key));
     const input=$('file-'+key);
     input.addEventListener('change',()=>load(key,input.files?.[0]));
     const target=$('drop-'+key);
@@ -77,6 +120,7 @@ function init(){
   window.addEventListener('resize',resize);
   window.addEventListener('pagehide',()=>{cancelAnimationFrame(frame);for(const k of Object.keys(slots))unload(k);clay.dispose();renderer.dispose()},{once:true});
   resize();requestAnimationFrame(tick);
+  void autoLoadRepoModels();
 }
 function resize(){
   if(!renderer)return;
