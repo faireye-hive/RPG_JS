@@ -11,7 +11,8 @@ import { WarriorRefinedModel } from '../render/three/WarriorRefinedModel.js';
 const $=id=>document.getElementById(id);
 const canvas=$('comparison');
 const state={view:'BC',motion:'idle',direction:0,zoom:1,paused:false,
-  wire:false,joints:false,auto:false,drag:false};
+  wire:false,joints:false,auto:false,drag:false,
+  manualRig:{neck:0,shoulder:0,elbow:0,wrist:0,fingers:0}};
 const actor={vx:0,vy:0,facing:Math.PI/2,attackPose:0,inv:0};
 const dpr=()=>Math.min(window.devicePixelRatio||1,1.75);
 let renderer,scene,camera,modelA,modelB,modelC,clayA,parts=[],jointMarkers=[];
@@ -127,6 +128,7 @@ function render(now){
   actor.vx=state.motion==='walk'?180:0;
   actor.vy=state.motion==='walk'?30:0;
   actor.demoGesture=state.motion==='gesture'?1:0;
+  actor.manualRig=state.manualRig;
   const swing=clock%1.15;
   actor.attackPose=state.motion==='attack'&&swing<.27?.27-swing:0;
   for(const mod of parts){
@@ -203,6 +205,12 @@ function hookup(){
   });
   $('bones').addEventListener('change',e=>state.joints=e.target.checked);
   $('spin').addEventListener('change',e=>state.auto=e.target.checked);
+  document.querySelectorAll('[data-rig]').forEach(slider=>slider.addEventListener('input',()=>{
+    const key=slider.dataset.rig;
+    state.manualRig[key]=Number(slider.value);
+    const output=document.getElementById('rig-'+key);
+    if(output)output.textContent=Number(slider.value).toFixed(2);
+  }));
   $('pause').addEventListener('click',e=>{
     state.paused=!state.paused;
     e.currentTarget.textContent=state.paused?'▶ Continuar':'Ⅱ Pausar';
@@ -213,6 +221,10 @@ function hookup(){
   $('reset').addEventListener('click',()=>{
     Object.assign(state,{view:'BC',motion:'idle',direction:0,zoom:1,
       paused:false,wire:false,joints:false,auto:false,drag:false});
+    state.manualRig={neck:0,shoulder:0,elbow:0,wrist:0,fingers:0};
+    document.querySelectorAll('[data-rig]').forEach(slider=>{
+      slider.value='0';document.getElementById('rig-'+slider.dataset.rig).textContent='0.00';
+    });
     clock=0;$('direction').value='front';$('zoom').value='1';
     $('zoom-out').textContent='1.0×';
     $('wireframe').checked=false;$('bones').checked=false;$('spin').checked=false;

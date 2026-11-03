@@ -80,3 +80,21 @@ test('walking and attack preserve plausible slim footprint and finite transforms
   });
   c.dispose();
 });
+
+test('painel manual C altera somente articulações solicitadas e mantém a geometria',()=>{
+  const c=new WarriorRefinedModel(),actor={
+    vx:0,vy:0,facing:Math.PI/2,attackPose:0,demoGesture:0,
+    manualRig:{neck:.6,shoulder:.8,elbow:.7,wrist:-.5,fingers:.9}
+  };
+  c.update(actor,0,1/60,{instant:true});
+  const rightShoulder=c.cRig.shoulders.find(v=>v.side===1);
+  const rightWrist=c.cRig.wrists.find(v=>v.side===1);
+  const rightFinger=c.cRig.fingers.find(v=>v.side===1).knuckles[0];
+  assert.ok(rightShoulder.upper.rotation.z>1);
+  assert.ok(rightShoulder.elbow.rotation.x<-.8);
+  assert.ok(rightWrist.wrist.rotation.z<-.25);
+  assert.ok(rightFinger.base.rotation.x<-.6);
+  assert.ok(c.cervical.rotation.y>.35);
+  assert.ok(Math.abs(c.cRig.shoulders.find(v=>v.side===-1).upper.rotation.z)<.4);
+  c.dispose();
+});
