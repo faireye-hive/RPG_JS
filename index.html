@@ -1,13 +1,102 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <title>Javascript RPG - Modern Retro Edition</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#090f1b">
+  <meta name="description" content="Crônicas do Éter — um RPG de sobrevivência com mundo e personagens desenhados por código.">
+  <title>Crônicas do Éter • Sobreviventes</title>
 </head>
-<body class="bg-slate-950 text-slate-100 antialiased overflow-hidden select-none">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+<body>
+  <div id="app">
+    <canvas id="game" aria-label="Campo de batalha do jogo"></canvas>
+    <div id="ambient-glow" aria-hidden="true"></div>
+
+    <section id="hud" hidden aria-label="Informações da partida">
+      <div class="hud-top">
+        <div class="hud-profile panel">
+          <div class="avatar-icon">✦</div>
+          <div class="hud-bars">
+            <div class="hud-bar-title"><span id="hero-name">Sentinela</span><span id="level-label">NV. 1</span></div>
+            <div class="bar hp-bar"><div id="hp-fill"></div></div>
+            <div class="hud-numbers"><span id="hp-label">100 / 100 PV</span><span class="tiny-tag">ÉTER</span></div>
+          </div>
+        </div>
+        <div class="hud-timer panel">
+          <span class="micro-heading">TEMPO DE SOBREVIVÊNCIA</span>
+          <strong id="time-label">00:00</strong>
+          <span class="kill-count"><span>☠</span> <span id="kills-label">0</span> inimigos</span>
+        </div>
+        <div class="hud-actions">
+          <button id="sound-toggle" class="icon-button" aria-label="Ativar ou desativar som">♫</button>
+          <button id="pause-button" class="icon-button" aria-label="Pausar partida">Ⅱ</button>
+        </div>
+      </div>
+      <div class="xp-wrap"><div class="xp-bar"><div id="xp-fill"></div></div><div class="xp-caption"><span>✧ EXPERIÊNCIA</span><span id="xp-label">0 / 24</span></div></div>
+      <div class="hud-bottom">
+        <div class="control-hint">WASD / SETAS <span>•</span> MOVER <span>•</span> ATAQUES AUTOMÁTICOS <span>•</span> ESC PAUSAR</div>
+        <div class="weapon-list" id="weapon-list"></div>
+      </div>
+    </section>
+
+    <section id="menu" class="screen menu-screen" aria-label="Menu principal">
+      <div class="menu-side">
+        <div class="eyebrow"><span class="eyebrow-line"></span> RPG PROCEDURAL <span class="eyebrow-line"></span></div>
+        <div class="menu-mark">✧</div>
+        <h1>CRÔNICAS <em>DO</em><br><span>ÉTER</span></h1>
+        <p class="menu-subtitle">Em um mundo consumido pela névoa, cada segundo é uma batalha. Sobreviva, evolua e descubra sua lenda.</p>
+        <div class="feature-tags"><span>✧ Mundo infinito</span><span>✦ Arte por código</span><span>⚔ Combate automático</span></div>
+        <div class="record panel"><span class="micro-heading">MELHOR SOBREVIVÊNCIA</span><strong id="best-label">—</strong><small id="best-kills">Seu primeiro legado começa agora.</small></div>
+      </div>
+      <div class="menu-card panel">
+        <div class="mode-badge">MODO 01 <span>•</span> DISPONÍVEL</div>
+        <h2>Sobreviventes</h2>
+        <p>Escolha o seu herói. Resista a oito minutos de hordas e conquiste a vitória.</p>
+        <div class="section-label">ESCOLHA SUA CLASSE</div>
+        <div class="class-list" id="class-list">
+          <button class="class-option active" data-class="guardian"><span class="class-symbol">⚔</span><span><strong>Guardião</strong><small>Espada • resistente</small></span><span class="class-radio"></span></button>
+          <button class="class-option" data-class="mage"><span class="class-symbol">✦</span><span><strong>Arcanista</strong><small>Magia • dano à distância</small></span><span class="class-radio"></span></button>
+          <button class="class-option" data-class="ranger"><span class="class-symbol">➶</span><span><strong>Andarilho</strong><small>Adagas • veloz</small></span><span class="class-radio"></span></button>
+        </div>
+        <button id="start-button" class="primary-button">INICIAR AVENTURA <span>→</span></button>
+        <p class="card-footnote">Sem imagens externas. Personagens, efeitos e cenário desenhados em Canvas 2D.</p>
+      </div>
+      <div class="menu-footer">CRÔNICAS DO ÉTER <span>◆</span> PROTÓTIPO v0.1</div>
+    </section>
+
+    <section id="level-screen" class="screen overlay-screen" hidden aria-label="Escolha uma melhoria" role="dialog" aria-modal="true">
+      <div class="overlay-card level-card panel">
+        <div class="eyebrow">✦ A ENERGIA DESPERTA ✦</div>
+        <h2>Nível <span id="level-up-number">2</span></h2>
+        <p>O Éter responde ao seu poder. Escolha uma evolução.</p>
+        <div id="upgrade-options" class="upgrade-grid"></div>
+        <small>O tempo fica pausado enquanto você escolhe.</small>
+      </div>
+    </section>
+
+    <section id="pause-screen" class="screen overlay-screen" hidden aria-label="Jogo pausado" role="dialog" aria-modal="true">
+      <div class="overlay-card panel">
+        <div class="eyebrow">✧ INTERVALO ✧</div>
+        <h2>Pausado</h2>
+        <p>O mundo aguarda o seu retorno.</p>
+        <button id="resume-button" class="primary-button">CONTINUAR <span>→</span></button>
+        <button id="pause-restart" class="ghost-button">RECOMEÇAR</button>
+        <button id="pause-menu" class="ghost-button">VOLTAR AO MENU</button>
+      </div>
+    </section>
+
+    <section id="end-screen" class="screen overlay-screen" hidden aria-label="Fim da partida" role="dialog" aria-modal="true">
+      <div class="overlay-card panel">
+        <div id="end-kicker" class="eyebrow">✧ FIM DA JORNADA ✧</div>
+        <h2 id="end-title">Sua lenda continua</h2>
+        <p id="end-description"></p>
+        <div class="result-grid"><div><small>TEMPO</small><strong id="end-time">00:00</strong></div><div><small>INIMIGOS</small><strong id="end-kills">0</strong></div><div><small>NÍVEL</small><strong id="end-level">1</strong></div></div>
+        <button id="again-button" class="primary-button">JOGAR NOVAMENTE <span>→</span></button>
+        <button id="end-menu" class="ghost-button">VOLTAR AO MENU</button>
+      </div>
+    </section>
+    <div id="joystick" hidden><div id="joystick-knob"></div></div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
 </body>
 </html>
