@@ -100,3 +100,10 @@ O código do Modelo A em `WarriorModel.js` fica intacto. O **Modelo B não é re
 
 
 A região do cotovelo no C possui `softElbowGeometry()`, uma malha com `skinIndex` / `skinWeight` de dois ossos, vinculada à posição mundial de descanso após atualizar as matrizes dos ancestrais. O segundo osso espelha a rotação do grupo do cotovelo na atualização de poses; `frustumCulled=false` evita sumiço durante flexão forte. `actor.manualRig` aceita `neck`, `shoulder`, `elbow`, `wrist`, `fingers` no estúdio e não interfere em gameplay. O exportador OBJ do C usa `SkeletonUtils.clone` para manter os ossos corretos ao clonar; o OBJ resultante é estático, sem animações. Há testes para pesos finitos/normalizados e limites anatômicos após caminhada/ataque.
+
+
+## Referência: modelos Mixamo sem texturas
+
+src/studio/MixamoReferenceStudio.js lê FBX/GLB com File.arrayBuffer() em memória, substitui os materiais por uma argila neutra e mantém os ossos e pesos originais do SkinnedMesh. Manipula as juntas pelo nome Mixamo para demonstrar caminhada, gesto e flexão dos dedos. O usuário escolhe os arquivos localmente; eles não são hospedados no Pages nem no repositório. O visualizador tem entrada multipágina no vite.config.js e importmap de compatibilidade para publicação bruta.
+
+Para integrar um dos personagens ao jogo, primeiro avaliar direitos de redistribuição, escolher visualmente, criar animações e validar desempenho mobile. Modelos A/B/C permanecem intactos.
