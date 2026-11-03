@@ -174,8 +174,11 @@ async function saveOBJ(which='C'){
   btn.disabled=true;btn.textContent='PREPARANDO OBJ...';
   try{
     const {OBJExporter}=await import('three/addons/exporters/OBJExporter.js');
+    const {clone:cloneWithRig}=await import('three/addons/utils/SkeletonUtils.js');
     const source=which==='B'?modelB:modelC;
-    const clone=source.root.clone(true);
+    // SkeletonUtils keeps both elbows' skin weights connected to their own
+    // cloned bones; Object3D.clone() alone does not clone a skin rig safely.
+    const clone=which==='C'?cloneWithRig(source.root):source.root.clone(true);
     // Restore neutral local origin when exporting a posed rig.
     clone.position.set(0,0,0);
     clone.updateMatrixWorld(true);
