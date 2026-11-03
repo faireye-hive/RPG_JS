@@ -13,3 +13,11 @@ Não substitua GLBs binários por arquivos de texto ou ponteiros Git LFS sem dis
 
 Após adicionar os dois arquivos na branch main, o laboratório
 `mixamo-reference-studio.html` os carrega automaticamente.
+
+Você também pode enviar os dois arquivos com o script Linux do próprio repositório:
+
+```bash
+bash scripts/upload-mixamo-models.sh ~/Downloads/Modelos_Mixamo_Caminhando.zip
+```
+
+O script confere o cabeçalho GLB, copia os arquivos, cria o commit na main e publica com `git push origin main`, usando sua autenticação Git local. Sem tokens expostos no chat.

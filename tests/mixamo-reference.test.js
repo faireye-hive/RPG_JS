@@ -13,7 +13,8 @@ test('FBX studio is in Vite bundle and supports raw Pages imports',()=>{
   const js=fs.readFileSync('src/studio/MixamoReferenceStudio.js','utf8');
   for(const keyword of ['FBXLoader','GLTFLoader','arrayBuffer','SkeletonHelper','isSkinnedMesh','o.material=clay'])
     assert.ok(js.includes(keyword),keyword);
-  assert.ok(!js.includes('fetch('),'local models should not be uploaded');
+  assert.ok(js.includes('fetch(relativeUrl'), 'models on Pages must be downloaded via GET');
+  assert.ok(!js.includes("method:'POST'")&&!js.includes('method:"POST"'),'local models must not be uploaded');
 });
 
 test('legacy FBX 6100 requires GLB conversion before browser import',()=>{
