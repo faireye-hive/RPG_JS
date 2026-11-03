@@ -1,3 +1,4 @@
+import { drawWarrior } from './characters/Warrior.js';
 // Artes dos personagens, inimigos e itens: 100% Canvas 2D, sem PNG/SVG.
 const PI2=Math.PI*2;
 function circle(c,x,y,r,color){c.fillStyle=color;c.beginPath();c.arc(x,y,r,0,PI2);c.fill();}
@@ -5,6 +6,8 @@ function oval(c,x,y,rx,ry,color){c.fillStyle=color;c.beginPath();c.ellipse(x,y,r
 function polygon(c,points,color){c.fillStyle=color;c.beginPath();c.moveTo(...points[0]);for(const pt of points.slice(1))c.lineTo(...pt);c.closePath();c.fill();}
 function line(c,pts,color,width=2){c.strokeStyle=color;c.lineWidth=width;c.lineCap='round';c.lineJoin='round';c.beginPath();c.moveTo(...pts[0]);for(const p of pts.slice(1))c.lineTo(...p);c.stroke();}
 export function drawPlayer(c,p,x,y,t){
+  // Guardião desenhado com o rig vetorial de alta definição, isolado por personagem.
+  if(p.classId==='guardian')return drawWarrior(c,p,x,y,t,{scale:.86});
   if(p.inv>0&&Math.floor(t*14)%2===0)return;
   c.save();c.translate(x,y);
   const step=Math.sin(t*11)*Math.min(1,Math.hypot(p.vx,p.vy)/90);

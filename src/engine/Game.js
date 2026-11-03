@@ -30,7 +30,7 @@ export class Game {
     this.lastClass=hero.id;this.world=new World(173);
     this.player={x:0,y:0,vx:0,vy:0,radius:16,hp:hero.hp,maxHp:hero.hp,
       speed:hero.speed,armor:hero.armor,might:hero.might,magnet:74,
-      xp:0,nextXp:xpForLevel(1),level:1,classId:hero.id,facing:0,inv:0};
+      xp:0,nextXp:xpForLevel(1),level:1,classId:hero.id,facing:0,inv:0,attackPose:0};
     this.elapsed=0;this.kills=0;this.spawnTimer=.7;this.lastPickupSound=-10;
     this.bossFlags={first:false,second:false};
     this.enemies=[];this.drops=[];this.projectiles=[];this.effects=[];this.particles=[];this.floatTexts=[];
@@ -98,6 +98,7 @@ export class Game {
     p.vx=v.x*p.speed;p.vy=v.y*p.speed;p.x+=p.vx*dt;p.y+=p.vy*dt;
     if(p.vx||p.vy)p.facing=Math.atan2(p.vy,p.vx);
     p.inv=Math.max(0,p.inv-dt);
+    p.attackPose=Math.max(0,(p.attackPose||0)-dt);
     updateEnemies(this,dt);
     if(this.state!=='playing')return;
     updateCombat(this,dt);
