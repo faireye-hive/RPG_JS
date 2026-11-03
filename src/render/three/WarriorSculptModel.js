@@ -82,7 +82,7 @@ export function sculptSweep(points,radii,segments=18,sides=9){
   g.setIndex(idx);g.computeVertexNormals();return g;
 }
 function sweep(parent,name,mat,points,radii,sections=18){
-  return mesh(parent,name,sculptSweep(points,radii,sections));
+  return mesh(parent,name,sculptSweep(points,radii,sections),mat);
 }
 function tube(parent,name,mat,points,r=.008){
   return sweep(parent,name,mat,points,points.map(()=>r),Math.max(9,points.length*6));
