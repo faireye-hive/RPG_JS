@@ -76,3 +76,12 @@ Fantasia noturna verde-petróleo, dourado, azul rúnico. Toda arte é gerada por
 A arte detalhada e o rig animado do Guerreiro (id interno `guardian`) ficam isolados em `src/render/characters/Warrior.js`, e são chamados por `drawPlayer` sem afetar a Arcanista e o Andarilho. O renderizador usa curvas quadráticas/cúbicas, metal com gradientes por faceta, escudo e espada com runas, rosto individualizado, capas com dobras e braços articulados. `attackPose` é acionado em `Combat.js` e decai no `Game.step`; não muda dano, alcance nem regras de colisão. Há uma página independente `warrior-studio.html` para ampliar, girar, animar e exportar PNG com alpha diretamente do desenho por código.
 
 Ao criar novos personagens, implemente `drawCharacter(ctx, actor, x, y, time, options)` em `src/render/characters/`, com âncora no solo em `(x,y)`, estado isolado com `save/restore` e sem imagens externas. Para performance, mantenha alto detalhe somente em personagens heróicos e utilize versões com LOD simplificado para exércitos.
+
+
+## Sistema atual: Guerreiro 3D procedural em mundo 2D
+
+O herói `guardian` usa um modelo 3D próprio, sem GLB ou texturas. A geometria é gerada em `src/render/three/WarriorModel.js` por lofts, elipsoides, placas extrudadas e curvas; o corpo é esguio e a armadura é uma camada opcional, nunca uma geometria gigante. `WarriorModel.nodes` expõe a hierarquia nomeada de articulações. O sistema `update(actor,time,dt)` anima caminhada, joelhos, balanço dos braços, cabeça, capa deformável, direção de 360° e ataque.
+
+`WarriorStage.js` cria iluminação com materiais toon e câmera ortográfica. Durante o jogo, `WarriorSpriteRenderer.js` renderiza somente um pequeno retrato WebGL RGBA por frame e `Renderer.js` compõe o resultado no mesmo Canvas 2D, na ordem por Y dos inimigos, mantendo a simulação intocada. A dependência `three` é compilada no Vite e carregada sob demanda; ao faltar WebGL ou o pacote, a arte vetorial anterior permanece como fallback.
+
+No ateliê `warrior-studio.html`, o 3D é renderizado em um Canvas WebGL transparente acima do cenário 2D. O usuário pode arrastar para girar, escolher 8 direções, animações, equipamentos, nível de armadura e exportar PNG com transparência. Para desempenho mobile, nunca instanciar um contexto WebGL por inimigo; utilizar um renderer/actor e resolução reduzida. Para vários heróis, considerar atlas de poses, instâncias e cache por combinação de equipamento.

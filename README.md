@@ -1,8 +1,10 @@
 # ✧ Crônicas do Éter — Sobreviventes
 
-RPG para navegador com primeiro modo estilo **survivors**: hordas crescentes, ataques automáticos, experiência, melhorias e vitória aos oito minutos. Três classes: **Guardião**, **Arcanista** e **Andarilho**.
+RPG para navegador com primeiro modo estilo **survivors**: hordas crescentes, ataques automáticos, experiência, melhorias e vitória aos oito minutos. Três classes: **Guerreiro**, **Arcanista** e **Andarilho**.
 
-**Todo o mundo e toda a arte são gerados em JavaScript/Canvas 2D.** Não há imagens, modelos ou spritesheets externos. Não há dependências de jogo no runtime.
+**O mundo, inimigos e efeitos são desenhados em Canvas 2D.** O Guerreiro é um **modelo 3D procedural com animação hierárquica**, renderizado por Three.js em câmera ortográfica e composto na ordem por Y da cena 2D. Não há arquivos externos de personagens, spritesheets ou modelos pré-fabricados. Three.js é uma dependência JavaScript instalada pelo npm, empacotada localmente pelo Vite. Se WebGL falhar, o motor exibe o Guerreiro vetorial antigo.
+
+Abra o [Ateliê 3D](warrior-studio.html) para girar o personagem em 360°, testar caminhada e ataque, trocar entre roupa e armadura leve e exportar PNG com fundo transparente.
 
 ## Instalação
 
@@ -38,6 +40,14 @@ Consulte [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). O motor, mundo, arte, dad
 ## Publicar no GitHub Pages
 
 O workflow `.github/workflows/pages.yml` gera e publica `dist/` quando mudanças chegam à `main`. Em **Settings → Pages → Build and deployment** selecione **GitHub Actions**. O Vite usa caminhos relativos.
+
+## Hierarquia e proporções do Guerreiro
+
+- Fonte 3D: `src/render/three/WarriorModel.js` — hierarquia nomeada (quadril, coluna, cabeça, ombros, cotovelos, mãos, quadris, joelhos e pés), geometria procedural, roupas e armadura leve.
+- `src/render/three/WarriorStage.js`: câmera ortográfica, toon shading, iluminação, renderização com alpha e exportação de PNG.
+- `src/render/three/WarriorSpriteRenderer.js`: renderiza o Guerreiro em uma textura WebGL pequena, composta com os inimigos na mesma camada Canvas 2D.
+- `src/studio/WarriorStudio.js`: editor de visualização e teste de movimentos, múltiplas direções e arraste para girar.
+- `src/render/characters/Warrior.js`: arte vetorial anterior mantida como fallback para navegadores sem WebGL.
 
 ## Versão anterior
 
