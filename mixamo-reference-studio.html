@@ -64,16 +64,16 @@ nav{margin-bottom:10px}h1{font-size:27px;margin:7px 0}p{font-size:11px}
 <nav><a href="./index.html">← VOLTAR AO RPG</a><a href="./warrior-compare.html">COMPARAR A/B/C ↗</a></nav>
 <div class="kicker">✧ LABORATÓRIO DE ANATOMIA REAL</div>
 <h1>Malha <em>rigada</em><br>sem texturas</h1>
-<p>Carregue os FBX enviados ou os GLB convertidos. Aqui são usados os <b>ossos Mixamo e os pesos reais da malha</b>, em vez de braços feitos de tubos.</p>
+<p><b>Use os GLB convertidos nesta conversa.</b> Seus FBX originais são versão 6100, incompatível com o FBXLoader atual. Os GLB preservam <b>ossos Mixamo e pesos reais da malha</b>, sem texturas e sem membros feitos de tubos.</p>
 <div id="drop-maria" class="drop"><strong>MODELO 1 — MARIA</strong>
 <input id="file-maria" type="file" accept=".fbx,.glb" aria-label="Abrir arquivo character.fbx ou GLB">
-<div id="status-maria" class="status">Selecione character.fbx</div>
-<p id="details-maria" class="details">FBX ou GLB, sem texturas no visor</p></div>
+<div id="status-maria" class="status">Selecione character_sem_texturas.glb</div>
+<p id="details-maria" class="details">GLB recomendado • FBX 6100 não suportado</p></div>
 <div id="drop-kachujin" class="drop"><strong>MODELO 2 — KACHUJIN</strong>
 <input id="file-kachujin" type="file" accept=".fbx,.glb" aria-label="Abrir arquivo character2.fbx ou GLB">
-<div id="status-kachujin" class="status">Selecione character2.fbx</div>
-<p id="details-kachujin" class="details">FBX ou GLB, sem texturas no visor</p></div>
-<p class="note">Os arquivos são lidos somente no seu navegador. Não são enviados ao repositório nem a servidores.</p>
+<div id="status-kachujin" class="status">Selecione character2_sem_texturas.glb</div>
+<p id="details-kachujin" class="details">GLB recomendado • FBX 6100 não suportado</p></div>
+<p class="note">Os GLB são lidos somente no seu navegador e não enviados ao servidor. FBX binário 6400+ também é aceito; os FBX 6100 fornecidos exigem a conversão prévia.</p>
 <div class="field"><label>ANIMAÇÃO PARA INSPEÇÃO</label><div class="choice">
 <button data-motion="idle" class="active">Parado</button>
 <button data-motion="walk">Caminhar</button>
@@ -108,7 +108,7 @@ nav{margin-bottom:10px}h1{font-size:27px;margin:7px 0}p{font-size:11px}
 </aside>
 <main class="stage"><canvas id="view" aria-label="Modelos FBX e GLB com rig Mixamo"></canvas>
 <div class="badge">MALHA ORIGINAL · SKINNING · MATERIAL NEUTRO</div>
-<div id="welcome">Escolha os arquivos FBX ou GLB à esquerda para visualizar os dois modelos.</div>
+<div id="welcome">Escolha os GLB convertidos nesta conversa para visualizar os dois modelos.</div>
 </main></div>
 <script type="module" src="./src/studio/MixamoReferenceStudio.js"></script>
 </body></html>

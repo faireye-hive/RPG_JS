@@ -87,3 +87,10 @@ O endereço mixamo-reference-studio.html permite abrir localmente os FBX origina
 O laboratório permite vistas frontal, perfil e costas; poses demonstrativas de caminhada e aceno; ajuste por articulação Mixamo (pescoço, ombro, cotovelo, punho e dedos); esqueleto visível, wireframe, zoom e PNG. As animações são experimentais e NÃO vêm dos FBX. Para resultado profissional, adicionar clipes Mixamo retargetados ou poses com keyframes.
 
 Os arquivos enviados em 2026-11-03 eram FBX binários v6100 com deformadores Skin: character.fbx tinha 65 ossos, dois meshes (Maria e espada) e 14.646 triângulos; character2.fbx tinha 75 ossos, um mesh (Kachujin) e 12.610 triângulos depois da triangulação. As versões convertidas para GLB não possuem texturas. O jogo continua com o Modelo A. Os arquivos dos personagens NÃO são redistribuídos no GitHub sem verificar a licença.
+
+
+### Compatibilidade dos dois arquivos enviados
+
+FBXLoader do Three.js só suporta FBX binário >= 6400; os arquivos character.fbx e character2.fbx são FBX binário 6100 e precisam ser convertidos antes. As versões geradas nesta conversa são character_sem_texturas.glb (65 ossos, 2,3 MB) e character2_sem_texturas.glb (75 ossos, 1,4 MB). Ambas contêm um material cinza neutro e skins Mixamo com pesos normalizados e sem imagens; nenhuma animação pronta estava no arquivo.
+
+O visualizador mostra um erro claro quando alguém tenta selecionar um FBX antigo 6100. FBX moderno 6400+ continua funcionando pelo FBXLoader.

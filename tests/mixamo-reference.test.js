@@ -15,3 +15,10 @@ test('FBX studio is in Vite bundle and supports raw Pages imports',()=>{
     assert.ok(js.includes(keyword),keyword);
   assert.ok(!js.includes('fetch('),'local models should not be uploaded');
 });
+
+test('legacy FBX 6100 requires GLB conversion before browser import',()=>{
+  const html=fs.readFileSync('mixamo-reference-studio.html','utf8');
+  assert.ok(html.includes('FBX 6100'));
+  assert.ok(html.includes('character_sem_texturas.glb'));
+  assert.ok(html.includes('character2_sem_texturas.glb'));
+});
