@@ -66,11 +66,53 @@ function finger(parent,mat,label,x,len,spread=0){
   return {base,distal,proximal};
 }
 
+/**
+ * A short two-bone skin is blended between upper arm and forearm. The parent
+ * shoulder bone remains rigid; vertices near the elbow inherit the child bone
+ * smoothly to avoid a visibly rigid hinge at large flexion angles.
+ */
+export function softElbowGeometry(){
+  const geo=sculptLoft([
+    [-.533,.073,.079,0,.005],
+    [-.485,.083,.091,0,.007],
+    [-.447,.092,.100,0,.005],
+    [-.407,.096,.103,0,.003],
+    [-.371,.098,.106,0,0],
+    [-.333,.100,.106,0,-.004]
+  ],24);
+  const attr=geo.getAttribute('position'),indices=[],weights=[];
+  for(let i=0;i<attr.count;i++){
+    const y=attr.getY(i);
+    const normalized=clamp((-.343-y)/.137,0,1);
+    const soft=normalized*normalized*(3-2*normalized);
+    indices.push(0,1,0,0);
+    weights.push(1-soft,soft,0,0);
+  }
+  geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(indices,4));
+  geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
+  return geo;
+}
+function softElbow(parent,material,side){
+  const base=new THREE.Bone();
+  base.name='osso.ombro.'+side;
+  parent.add(base);
+  const bend=new THREE.Bone();
+  bend.name='osso.cotovelo.'+side;
+  bend.position.y=-.425;
+  base.add(bend);
+  const sleeve=new THREE.SkinnedMesh(softElbowGeometry(),material);
+  sleeve.name='malha.flexível.cotovelo.'+side;
+  parent.add(sleeve);
+  base.updateMatrixWorld(true);
+  sleeve.bind(new THREE.Skeleton([base,bend]));
+  return {sleeve,bend};
+}
+
 export class WarriorRefinedModel extends WarriorSculptModel {
   constructor(){
     super();
     this.root.name='modelo-c.escultura-anatômica';
-    this.cRig={shoulders:[],wrists:[],fingers:[],thumbs:[],neck:null};
+    this.cRig={shoulders:[],wrists:[],fingers:[],thumbs:[],elbowSkins:[],neck:null};
     this.poseGesture=0;
     this.refineNeck();
     this.refineArms();
@@ -171,6 +213,9 @@ export class WarriorRefinedModel extends WarriorSculptModel {
         [.025,.074,.077,0,-.010],
         [.062,.018,.021,0,-.008]
       ],24);
+      // Two-bone skin overlays the bend so the elbow is not only a hard sphere.
+      const smoothElbow=softElbow(upper,mat,suffix);
+      this.cRig.elbowSkins.push({side,elbow,...smoothElbow});
       // Subtle raised fabric folds make the anatomy read in clay.
       sweep(elbow,'costura.punho.'+suffix,mat,[
         [-.064,-.302,.04],[0,-.315,.072],
@@ -304,6 +349,9 @@ export class WarriorRefinedModel extends WarriorSculptModel {
         distal.rotation.z=(i-1.5)*.012;
       });
     }
+    for(const {elbow,bend} of this.cRig.elbowSkins){
+      bend.rotation.copy(elbow.rotation);
+    }
     for(const {side,thumbRoot,thumbTip} of this.cRig.thumbs){
       const pulse=.5+.5*Math.sin(time*2.5+side);
       const grip=.12+.58*attack*(side>0?1:0)+.17*walk+
@@ -313,5 +361,9 @@ export class WarriorRefinedModel extends WarriorSculptModel {
       thumbRoot.rotation.z=side*(.36-.15*grip);
       thumbTip.rotation.x=-.12-.45*grip;
     }
+  }
+  dispose(){
+    for(const {sleeve} of this.cRig.elbowSkins)sleeve.skeleton.dispose();
+    super.dispose();
   }
 }
