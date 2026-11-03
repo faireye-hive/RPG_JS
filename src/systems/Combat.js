@@ -35,6 +35,7 @@ function fire(g,w){
   if(w.id==='blade'){
     const target=nearest(g,240),angle=target?Math.atan2(target.y-p.y,target.x-p.x):p.facing;
     p.facing=angle;
+    p.attackPose=.27; // Duração do movimento de espada do rig procedural.
     const r=96+lv*10;
     g.effects.push({kind:'slash',x:p.x,y:p.y-22,angle,radius:r,life:.23,duration:.23});
     g.audio.play('slash');
