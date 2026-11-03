@@ -16,7 +16,7 @@ test('Modelo B é uma geometria procedural nova, sem mapas de textura',()=>{
   const meshes=[];
   modelB.root.traverse(obj=>{if(obj.isMesh)meshes.push(obj);});
   assert.ok(meshes.length>=50,'B deve conter detalhes 3D suficientes');
-  assert.ok(meshes.every(m=>m.material===modelB.material));
+  assert.deepEqual(meshes.filter(obj=>obj.material!==modelB.material).map(obj=>[obj.name,obj.material?.type]),[]);
   assert.equal(modelB.material.map,null);
   assert.equal(modelB.material.normalMap,null);
   assert.equal(modelB.material.bumpMap,null);
