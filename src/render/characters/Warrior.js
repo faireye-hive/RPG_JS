@@ -55,12 +55,32 @@ function skin(ctx, x1=-10, x2=12, y=-120) {
 }
 function region(ctx, commands, fill, outline = null, width = 1.3) {
   ctx.beginPath();
-  for (const cmd of commands) {
-    if (cmd[0] === 'M') ctx.moveTo(cmd[1],cmd[2]);
-    else if (cmd[0] === 'L') ctx.lineTo(cmd[1],cmd[2]);
-    else if (cmd[0] === 'Q') ctx.quadraticCurveTo(...cmd.slice(1));
-    else if (cmd[0] === 'C') ctx.bezierCurveTo(...cmd.slice(1));
-    else if (cmd[0] === 'Z') ctx.closePath();
+  // Q(x,y) is a smooth curve waypoint. It uses the following path point
+  // as its exit tangent, making detailed outlines concise without malformed
+  // quadraticCurveTo calls. Explicit Q(cx,cy,x,y) is also supported.
+  let first=null;
+  for (let i=0;i<commands.length;i++) {
+    const cmd=commands[i];
+    if (cmd[0]==='M') {ctx.moveTo(cmd[1],cmd[2]);first=[cmd[1],cmd[2]];}
+    else if(cmd[0]==='L') ctx.lineTo(cmd[1],cmd[2]);
+    else if(cmd[0]==='Q') {
+      if(cmd.length===5)ctx.quadraticCurveTo(...cmd.slice(1));
+      else {
+        const after=commands[i+1];
+        let end=[cmd[1],cmd[2]];
+        if(after){
+          let target=null;
+          if(after[0]==='Q'&&after.length===5)target=[after[3],after[4]];
+          else if(after[0]==='C')target=[after[5],after[6]];
+          else if(after[0]==='Z')target=first;
+          else if(after.length>=3)target=[after[1],after[2]];
+          if(target)end=[(cmd[1]+target[0])/2,(cmd[2]+target[1])/2];
+        }
+        ctx.quadraticCurveTo(cmd[1],cmd[2],end[0],end[1]);
+      }
+    }
+    else if(cmd[0]==='C')ctx.bezierCurveTo(...cmd.slice(1));
+    else if(cmd[0]==='Z')ctx.closePath();
   }
   if (fill) { ctx.fillStyle=fill;ctx.fill(); }
   if (outline) { ctx.lineWidth=width;ctx.strokeStyle=outline;ctx.stroke(); }
