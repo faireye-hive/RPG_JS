@@ -7,6 +7,7 @@
   <meta name="description" content="Crônicas do Éter — um RPG de sobrevivência com mundo e personagens desenhados por código.">
   <title>Crônicas do Éter • Sobreviventes</title>
   <link rel="stylesheet" href="./src/styles.css">
+  <link rel="stylesheet" href="./src/hud.css">
 <!-- Compatibility for GitHub Pages serving original sources without Vite.
      Vite-built pages already bundle Three.js, so this map is unused. -->
 <script type="importmap">
@@ -23,30 +24,85 @@
     <canvas id="game" aria-label="Campo de batalha do jogo"></canvas>
     <div id="ambient-glow" aria-hidden="true"></div>
 
-    <section id="hud" hidden aria-label="Informações da partida">
+    <!-- Desktop survivor HUD: compact, ornamental, automatic combat only. -->
+    <section id="hud" class="survivor-hud" hidden aria-label="Informações da partida">
       <div class="hud-top">
-        <div class="hud-profile panel">
-          <div class="avatar-icon">✦</div>
-          <div class="hud-bars">
-            <div class="hud-bar-title"><span id="hero-name">Sentinela</span><span id="level-label">NV. 1</span></div>
-            <div class="bar hp-bar"><div id="hp-fill"></div></div>
-            <div class="hud-numbers"><span id="hp-label">100 / 100 PV</span><span class="tiny-tag">ÉTER</span></div>
+        <div class="hud-left-stack">
+          <div class="hud-profile panel">
+            <div class="avatar-icon" aria-hidden="true">
+              <svg class="portrait-art" viewBox="0 0 72 84" role="img" aria-label="Retrato ilustrado do Guerreiro">
+                <defs>
+                  <linearGradient id="avatar-back" x2="1" y2="1"><stop stop-color="#264d4b"/><stop offset="1" stop-color="#101e29"/></linearGradient>
+                  <linearGradient id="avatar-hair" x2="1" y2="1"><stop stop-color="#9a6642"/><stop offset="1" stop-color="#3c2523"/></linearGradient>
+                </defs>
+                <rect x="1" y="1" width="70" height="82" rx="9" fill="url(#avatar-back)" stroke="#b8a66a" stroke-width="1.5"/>
+                <path d="M4 83L12 63L26 59L36 65L48 59L61 64L69 83Z" fill="#516a71" stroke="#d4ba7c" stroke-width="1.8"/>
+                <path d="M25 59L36 65L47 58L42 83H30Z" fill="#b07952"/>
+                <path d="M16 28Q13 12 32 8Q51 2 59 18L57 43L47 54L25 53L17 42Z" fill="url(#avatar-hair)" stroke="#392425" stroke-width="2"/>
+                <path d="M24 28Q23 16 34 15Q48 14 50 28L49 43Q47 53 36 56Q25 54 23 42Z" fill="#e3b18c" stroke="#76543f" stroke-width="1"/>
+                <path d="M20 26L24 13L36 9L34 20L52 13L49 23L56 20L52 30L42 24L33 29L28 25L18 33Z" fill="url(#avatar-hair)"/>
+                <path d="M27 36L33 36M40 36L46 36" stroke="#392d2f" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="31" cy="37" r="1.4" fill="#77bbba"/><circle cx="43" cy="37" r="1.4" fill="#77bbba"/>
+                <path d="M36 38L35 44L38 45M32 49Q36 52 41 49" fill="none" stroke="#956d56" stroke-width="1.1"/>
+                <path d="M12 66L22 60L31 67L24 83H11ZM47 66L54 60L64 65L63 83H49Z" fill="#9f7254" stroke="#e1c292" stroke-width="1.3"/>
+              </svg>
+              <span class="portrait-crest">✦</span>
+            </div>
+            <div class="hud-bars">
+              <div class="hud-bar-title"><strong id="hero-name">Guerreiro</strong><span id="level-label">Nv. 1</span></div>
+              <div class="hud-resource">
+                <span class="resource-icon health" aria-hidden="true">♥</span>
+                <div class="bar hp-bar" role="progressbar" aria-label="Pontos de vida" aria-valuemin="0"><div id="hp-fill"></div></div>
+                <strong id="hp-label">140 / 140</strong>
+              </div>
+              <div class="hud-secondary"><span>⬡ ARMADURA <b id="armor-label">2</b></span><span>⚔ PODER <b id="might-label">100%</b></span></div>
+            </div>
+          </div>
+          <div class="hud-auto-skills panel" aria-label="Habilidades usadas automaticamente">
+            <span class="hud-skill-prefix" aria-hidden="true">✧</span>
+            <div class="weapon-list" id="weapon-list"></div>
+            <small class="automatic-label">AUTOMÁTICAS</small>
           </div>
         </div>
         <div class="hud-timer panel">
-          <span class="micro-heading">TEMPO DE SOBREVIVÊNCIA</span>
+          <span class="timer-ornament" aria-hidden="true">❧</span>
+          <span class="micro-heading">⌛ TEMPO DE SOBREVIVÊNCIA</span>
           <strong id="time-label">00:00</strong>
-          <span class="kill-count"><span>☠</span> <span id="kills-label">0</span> inimigos</span>
+          <span class="kill-count"><span aria-hidden="true">✹</span> <span id="kills-label">0</span> inimigos derrotados</span>
         </div>
         <div class="hud-actions">
-          <button id="sound-toggle" class="icon-button" aria-label="Ativar ou desativar som">♫</button>
-          <button id="pause-button" class="icon-button" aria-label="Pausar partida">Ⅱ</button>
+          <button id="sound-toggle" class="icon-button" aria-label="Ativar ou desativar som" title="Som">♫</button>
+          <button id="pause-button" class="icon-button" aria-label="Pausar partida" title="Pausar (Esc)">Ⅱ</button>
         </div>
       </div>
-      <div class="xp-wrap"><div class="xp-bar"><div id="xp-fill"></div></div><div class="xp-caption"><span>✧ EXPERIÊNCIA</span><span id="xp-label">0 / 24</span></div></div>
+      <nav class="hud-rail panel" aria-label="Ferramentas da partida">
+        <button type="button" class="hud-nav-button" id="hud-skills-button" data-hud-panel="skills" aria-expanded="false" title="Habilidades automáticas">✦<span class="sr-only">Habilidades</span></button>
+        <button type="button" class="hud-nav-button" id="hud-map-button" title="Ampliar o minimapa" aria-pressed="false">◈<span class="sr-only">Mapa</span></button>
+        <button type="button" class="hud-nav-button" id="hud-records-button" data-hud-panel="records" aria-expanded="false" title="Recordes">♜<span class="sr-only">Recordes</span></button>
+        <button type="button" class="hud-nav-button" id="hud-help-button" data-hud-panel="help" aria-expanded="false" title="Como jogar">?<span class="sr-only">Como jogar</span></button>
+      </nav>
+      <aside class="hud-popover panel" id="hud-info" hidden aria-label="Informações adicionais">
+        <div class="hud-popover-header"><strong id="hud-info-title">Habilidades</strong><button type="button" id="hud-info-close" aria-label="Fechar painel">×</button></div>
+        <div id="hud-info-content"></div>
+      </aside>
+      <aside class="hud-minimap panel" id="minimap-panel" aria-label="Minimapa de inimigos próximos">
+        <div class="minimap-title">◈ FLORESTA <span>MAPA</span></div>
+        <canvas id="minimap" width="196" height="143" aria-label="Posição dos inimigos próximos e do herói"></canvas>
+        <div class="minimap-foot">● INIMIGOS <span>◆ VOCÊ</span></div>
+      </aside>
       <div class="hud-bottom">
-        <div class="control-hint">WASD / SETAS <span>•</span> MOVER <span>•</span> ATAQUES AUTOMÁTICOS <span>•</span> ESC PAUSAR</div>
-        <div class="weapon-list" id="weapon-list"></div>
+        <div class="hud-experience">
+          <span class="hud-exp-title">✧ <b>EXP</b></span>
+          <div class="xp-bar" role="progressbar" aria-label="Experiência" aria-valuemin="0"><div id="xp-fill"></div></div>
+          <strong id="xp-label">0 / 38</strong>
+        </div>
+        <div class="hud-bottom-stats">
+          <span class="hud-stat"><i class="hud-stat-icon heart">♥</i> <b id="bottom-hp">140</b> <small>PV</small></span>
+          <span class="hud-stat"><i class="hud-stat-icon armor">⬡</i> <b id="bottom-armor">2</b> <small>ARM</small></span>
+          <span class="hud-stat"><i class="hud-stat-icon power">⚔</i> <b id="bottom-might">100%</b> <small>PODER</small></span>
+          <span class="hud-stat"><i class="hud-stat-icon movement">➤</i> <b id="bottom-speed">205</b> <small>MOV</small></span>
+          <span class="hud-day"><span aria-hidden="true">☼</span> SOBREVIVA</span>
+        </div>
       </div>
     </section>
 
