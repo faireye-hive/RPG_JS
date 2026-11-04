@@ -1,0 +1,340 @@
+/* PC survivor HUD — ornamental treatment without a mobile skill hotbar.
+   UI values and skill cooldowns come from real simulation state. */
+.survivor-hud{
+ --hud-gold:#d6b676;--hud-gold-bright:#ffe2a5;
+ --hud-navy:#091722;--hud-ink:#0d2030;--hud-leaf:#6ba87b;
+ font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+ color:#f5eee0;
+}
+.survivor-hud .panel{
+ background:linear-gradient(150deg,rgba(19,37,48,.97),rgba(8,20,30,.97));
+ border:1px solid rgba(224,188,115,.69);
+ box-shadow:0 4px 0 #08151a9c,0 8px 22px #02070cb0,
+ inset 0 0 0 2px rgba(9,18,30,.97),inset 0 0 0 3px rgba(144,112,66,.22);
+}
+.survivor-hud .hud-top{
+ top:max(13px,env(safe-area-inset-top));left:20px;right:20px;
+ display:block;height:125px;pointer-events:none;
+}
+.survivor-hud .hud-left-stack{
+ position:absolute;top:0;left:0;width:min(405px,calc((100vw - 720px)/2));
+ min-width:282px;pointer-events:auto;
+}
+.survivor-hud .hud-profile{
+ display:flex;align-items:stretch;gap:12px;min-width:0;padding:9px 12px 10px;
+ height:105px;position:relative;overflow:visible;
+ clip-path:polygon(9px 0,calc(100% - 9px) 0,100% 10px,100% calc(100% - 10px),
+ calc(100% - 10px) 100%,10px 100%,0 calc(100% - 9px),0 10px);
+}
+.survivor-hud .hud-profile:before{
+ content:"";position:absolute;left:2px;right:2px;top:2px;height:2px;
+ background:linear-gradient(90deg,transparent,#e9cf94,transparent);pointer-events:none;
+}
+.survivor-hud .avatar-icon{
+ width:86px;height:84px;flex:0 0 86px;padding:0;margin:-2px 0;
+ position:relative;display:block;border:1px solid #cbb475;
+ border-radius:10px;background:#183235;box-shadow:0 0 0 3px #0b1c22;
+}
+.survivor-hud .portrait-art{width:100%;height:100%;display:block;object-fit:contain}
+.survivor-hud .portrait-crest{
+ position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);
+ color:#ffe0a0;background:#13313b;border:1px solid #ba9454;
+ border-radius:50%;font-size:14px;line-height:18px;text-align:center;width:22px;height:22px;
+ box-shadow:0 2px 6px #030b11
+}
+.survivor-hud .hud-bars{min-width:0;flex:1;padding-top:4px}
+.survivor-hud .hud-bar-title{gap:10px;display:flex;align-items:center;justify-content:space-between;
+ font-size:18px;color:#f9f5e6;text-shadow:0 1px 3px #080d13}
+.survivor-hud .hud-bar-title strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.survivor-hud #level-label{flex:none;border:1px solid #a97f3e;border-radius:18px;
+ padding:3px 13px;color:#ffd480;line-height:1;
+ background:linear-gradient(#142532,#0b1a24);font-size:13px;letter-spacing:.02em}
+.survivor-hud .hud-resource{display:flex;align-items:center;gap:7px;margin-top:12px;position:relative}
+.survivor-hud .resource-icon.health{font-size:20px;color:#fb6172;text-shadow:0 2px 3px #2e060d}
+.survivor-hud .bar.hp-bar{
+ flex:1;margin:0;height:17px;border:1px solid #ddbd81;
+ background:#101a23;box-shadow:inset 0 2px 4px #02070b,0 1px 2px #020609;
+ border-radius:9px;overflow:hidden;
+}
+.survivor-hud .hp-bar #hp-fill{
+ background:linear-gradient(180deg,#ff7b7a 0%,#e7445d 39%,#a51338 100%);
+ box-shadow:inset 0 2px 1px #ffe5d366;
+ border-right:1px solid #ffd2be;transition:width .15s;
+}
+.survivor-hud #hp-label{
+ position:absolute;right:7px;top:50%;transform:translateY(-50%);
+ font-size:11px;color:#fff8e9;text-shadow:0 1px 3px #000,1px 0 3px #000;
+ font-weight:900;font-variant-numeric:tabular-nums;pointer-events:none;
+}
+.survivor-hud .hud-secondary{
+ margin:10px 2px 0;display:flex;justify-content:space-between;gap:8px;
+ color:#a9d4c7;font-size:9px;font-weight:800;letter-spacing:.04em;
+}
+.survivor-hud .hud-secondary b{color:#f8d997;padding-left:2px}
+.survivor-hud .hud-auto-skills{
+ display:flex;align-items:center;gap:6px;width:fit-content;min-width:178px;
+ margin:6px 0 0 108px;padding:5px 9px;border-radius:9px;min-height:45px;
+}
+.survivor-hud .hud-skill-prefix{font-size:19px;color:#d9c081;margin-right:1px}
+.survivor-hud .weapon-list{display:flex;align-items:center;gap:6px}
+.survivor-hud .weapon-chip{
+ width:37px;height:37px;min-width:37px;display:grid;place-content:center;
+ position:relative;overflow:hidden;gap:0;padding:0;
+ border:1px solid #d9af64;border-radius:8px;background:#182c36;
+ box-shadow:inset 0 0 0 2px #0d202b,0 2px 5px #02080d;
+}
+.survivor-hud .weapon-chip:after{
+ content:"";inset:0;position:absolute;z-index:1;pointer-events:none;
+ background:conic-gradient(from -90deg,rgba(4,11,19,.72) var(--cooldown,0%),transparent var(--cooldown,0%));
+}
+.survivor-hud .weapon-chip .weapon-icon{
+ line-height:1;font-size:22px;color:#ffe2aa;text-shadow:0 0 6px #ffaa64;
+ text-align:center;position:relative;z-index:0;
+}
+.survivor-hud .weapon-chip[data-weapon="bolt"] .weapon-icon{color:#90d7ff;text-shadow:0 0 8px #428cff}
+.survivor-hud .weapon-chip[data-weapon="aura"] .weapon-icon{color:#81ebf0;text-shadow:0 0 8px #44a7de}
+.survivor-hud .weapon-chip[data-weapon="dagger"] .weapon-icon{color:#bef2bc;text-shadow:0 0 8px #81d891}
+.survivor-hud .weapon-chip small{
+ position:absolute;bottom:1px;right:1px;min-width:13px;
+ text-align:center;z-index:2;font-size:9px;line-height:12px;color:#f7e7bb;
+ background:#10212cd9;border-top-left-radius:4px;
+}
+.survivor-hud .automatic-label{
+ color:#97b8ab;font-size:8px;font-weight:850;letter-spacing:.08em;
+ display:block;white-space:nowrap;
+}
+.survivor-hud .hud-timer{
+ position:absolute;left:50%;top:-7px;transform:translateX(-50%);
+ margin:0;min-width:290px;max-width:min(36vw,400px);
+ height:100px;padding:10px 24px 9px;border-radius:5px 5px 15px 15px;
+ text-align:center;overflow:visible;
+ border-color:#ca9e65;
+}
+.survivor-hud .hud-timer:before,.survivor-hud .hud-timer:after{
+ content:"❧";position:absolute;top:2px;font:45px Georgia,serif;
+ color:#6e9c6a;text-shadow:0 1px #dcb979;pointer-events:none;
+}
+.survivor-hud .hud-timer:before{left:-22px;transform:rotate(-23deg)}
+.survivor-hud .hud-timer:after{right:-22px;transform:scaleX(-1) rotate(-23deg)}
+.survivor-hud .timer-ornament{position:absolute;top:-16px;left:50%;transform:translateX(-50%);
+ color:#dab878;text-shadow:0 2px #071722;font-size:28px}
+.survivor-hud .hud-timer .micro-heading{font-size:10px;letter-spacing:.11em;color:#d9ebdc;font-weight:900}
+.survivor-hud .hud-timer strong{
+ font:700 35px/1.12 Georgia,serif;color:#ffe5a7;text-shadow:0 2px 5px #02080d;
+ margin:6px 0 4px;letter-spacing:.09em;font-variant-numeric:tabular-nums;
+}
+.survivor-hud .kill-count{display:block;color:#f3e7d1;font-size:11px;font-weight:700}
+.survivor-hud .kill-count span:first-child{color:#ee7169}
+.survivor-hud .hud-actions{
+ position:absolute;right:0;top:0;display:flex;gap:9px;pointer-events:auto;
+}
+.survivor-hud .icon-button{
+ width:45px;height:46px;color:#e8c584;border:1px solid #c59d60;
+ border-radius:8px;background:linear-gradient(#17323c,#0b1b29);
+ box-shadow:0 3px 0 #07121d,0 5px 10px #0008,inset 0 0 0 2px #1c3337;
+ font-size:22px;transition:background .15s,transform .15s;
+}
+.survivor-hud .icon-button:hover{background:#2c4e51;transform:translateY(-2px)}
+.survivor-hud .hud-rail{
+ pointer-events:auto;position:absolute;left:20px;top:174px;
+ display:grid;gap:5px;padding:7px;border-radius:10px;width:58px;
+}
+.survivor-hud .hud-nav-button{
+ display:grid;place-items:center;border:1px solid #9c814f;color:#edd19c;
+ background:linear-gradient(#162d39,#0d1d2a);border-radius:8px;
+ font-weight:800;font-size:22px;width:42px;height:43px;
+ box-shadow:inset 0 0 0 2px #1c303a;
+}
+.survivor-hud .hud-nav-button:hover,.survivor-hud .hud-nav-button[aria-expanded="true"],
+.survivor-hud .hud-nav-button[aria-pressed="true"]{
+ background:#33584f;color:#ffedba;border-color:#f0d49a;
+}
+.survivor-hud .hud-popover{
+ position:absolute;left:86px;top:174px;width:310px;max-width:calc(100vw - 100px);
+ border-radius:10px;z-index:4;pointer-events:auto;padding:14px;
+}
+.survivor-hud .hud-popover-header{
+ display:flex;justify-content:space-between;align-items:center;
+ padding-bottom:9px;border-bottom:1px solid #87724d;
+ color:#f4deb0;font:700 18px Georgia,serif;
+}
+.survivor-hud .hud-popover-header button{
+ border:1px solid #8c855e;border-radius:5px;background:#1c353a;color:#eed9a3;
+ width:27px;height:27px;font-size:21px;line-height:1;
+}
+.survivor-hud #hud-info-content{margin-top:12px;line-height:1.6;font-size:11px;color:#d9e1d3}
+.survivor-hud #hud-info-content p{margin:4px 0 9px}
+.survivor-hud .popover-entry{padding:8px 0;border-bottom:1px solid #7d866133}
+.survivor-hud .popover-entry:last-child{border:0}
+.survivor-hud .popover-entry strong{color:#eed7a1}
+.survivor-hud .popover-entry small{color:#a9c6b7;display:block}
+.survivor-hud .hud-minimap{
+ position:absolute;right:19px;bottom:75px;width:211px;height:201px;
+ border-radius:15px 15px 12px 12px;overflow:hidden;
+ background:linear-gradient(135deg,#193a35,#0d252b);
+ box-shadow:0 8px 24px #000b,inset 0 0 0 3px #071b26;
+}
+.survivor-hud .hud-minimap:before,.survivor-hud .hud-minimap:after{
+ position:absolute;color:#f0d89d;z-index:2;font-size:17px;pointer-events:none;
+}
+.survivor-hud .hud-minimap:before{content:"❧";left:5px;top:3px}
+.survivor-hud .hud-minimap:after{content:"❧";right:5px;bottom:1px;transform:rotate(180deg)}
+.survivor-hud .minimap-title{
+ height:25px;display:flex;align-items:center;justify-content:space-between;
+ font-size:9px;letter-spacing:.12em;color:#c5e0c5;padding:0 16px;
+ background:#10242bdd;border-bottom:1px solid #b99c6177;font-weight:900;
+}
+.survivor-hud .minimap-title span{color:#f6dda0}
+.survivor-hud #minimap{display:block;width:100%;height:148px}
+.survivor-hud .minimap-foot{
+ display:flex;align-items:center;justify-content:space-between;
+ font-size:8px;color:#e9a399;padding:5px 14px;
+ border-top:1px solid #92a07d44;letter-spacing:.08em;
+}
+.survivor-hud .minimap-foot span{color:#e9d288}
+.survivor-hud .hud-minimap.expanded{
+ width:304px;height:298px;bottom:76px;
+}
+.survivor-hud .hud-minimap.expanded #minimap{height:245px}
+.survivor-hud .hud-bottom{
+ position:absolute;left:12px;right:12px;bottom:10px;height:56px;
+ display:flex;align-items:center;gap:20px;padding:0 18px 0 22px;
+ border:1px solid #b89d64;border-radius:11px;
+ background:linear-gradient(180deg,rgba(15,36,43,.98),rgba(6,23,32,.98));
+ box-shadow:0 4px 0 #06161d,inset 0 0 0 2px #1a3638,0 -2px 18px #06161488;
+}
+.survivor-hud .hud-bottom:before,.survivor-hud .hud-bottom:after{
+ position:absolute;top:-8px;color:#e0c588;font:22px Georgia,serif;
+ pointer-events:none;
+}
+.survivor-hud .hud-bottom:before{content:"❦";left:4px}
+.survivor-hud .hud-bottom:after{content:"❦";right:4px;transform:scaleX(-1)}
+.survivor-hud .hud-experience{
+ flex:1;display:flex;align-items:center;gap:14px;min-width:130px;max-width:none;
+}
+.survivor-hud .hud-exp-title{font-size:15px;display:flex;align-items:center;gap:7px;color:#91dcdb;white-space:nowrap}
+.survivor-hud .hud-exp-title b{font-size:12px;color:#f4eee1;letter-spacing:.05em}
+.survivor-hud .xp-bar{
+ flex:1;height:13px;min-width:45px;border-radius:8px;
+ border:1px solid #477786;background:#0a1b2b;overflow:hidden;
+ box-shadow:inset 0 2px 3px #020a0e;
+}
+.survivor-hud #xp-fill{
+ height:100%;background:linear-gradient(#7deaff,#28b2e4 60%,#1373b7);
+ border-right:1px solid #dbf9ff;box-shadow:0 0 8px #3ecefcaa;
+}
+.survivor-hud #xp-label{
+ color:#f5f1e8;min-width:56px;font-weight:800;
+ font-size:12px;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;
+}
+.survivor-hud .hud-bottom-stats{display:flex;align-items:center;gap:0;min-width:0}
+.survivor-hud .hud-stat{
+ display:flex;align-items:center;gap:5px;padding:0 12px;
+ border-right:1px solid #5779778a;white-space:nowrap;
+ font-size:12px;font-variant-numeric:tabular-nums;
+}
+.survivor-hud .hud-stat b{font-size:13px}
+.survivor-hud .hud-stat small{color:#8eafa9;font-size:8px;font-weight:850}
+.survivor-hud .hud-stat-icon{font-style:normal;font-size:22px;line-height:1}
+.survivor-hud .hud-stat-icon.heart{color:#ff6474;text-shadow:0 0 5px #c02740}
+.survivor-hud .hud-stat-icon.armor{color:#98ccdc}
+.survivor-hud .hud-stat-icon.power{color:#ecc992}
+.survivor-hud .hud-stat-icon.movement{color:#ffd56f}
+.survivor-hud .hud-day{
+ font-size:10px;color:#d8be79;white-space:nowrap;
+ display:flex;align-items:center;gap:7px;padding-left:11px;font-weight:850;letter-spacing:.04em;
+}
+.survivor-hud .hud-day span{font-size:22px}
+.survivor-hud .sr-only{
+ position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+ clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
+@media(max-width:1280px){
+ .survivor-hud .hud-left-stack{width:330px;min-width:0}
+ .survivor-hud .hud-profile{padding:8px;gap:8px}
+ .survivor-hud .avatar-icon{width:68px;height:79px;flex-basis:68px}
+ .survivor-hud .hud-bar-title{font-size:15px}
+ .survivor-hud .hud-auto-skills{margin-left:80px}
+ .survivor-hud .hud-bottom{gap:8px;padding-inline:13px}
+ .survivor-hud .hud-stat{padding:0 7px}
+ .survivor-hud .hud-day{display:none}
+ .survivor-hud .hud-minimap{width:187px;height:190px}
+ .survivor-hud #minimap{height:137px}
+}
+@media(max-width:900px){
+ .survivor-hud .hud-top{left:10px;right:10px;top:10px;height:125px}
+ .survivor-hud .hud-left-stack{width:265px}
+ .survivor-hud .hud-profile{height:88px}
+ .survivor-hud .avatar-icon{width:54px;height:65px;flex-basis:54px}
+ .survivor-hud .hud-bar-title{font-size:13px}
+ .survivor-hud #level-label{font-size:10px;padding:3px 7px}
+ .survivor-hud .hud-resource{margin-top:8px}
+ .survivor-hud .hud-secondary{font-size:8px;margin-top:8px}
+ .survivor-hud .hud-auto-skills{margin-left:62px;min-height:38px}
+ .survivor-hud .weapon-chip{width:31px;height:31px;min-width:31px}
+ .survivor-hud .automatic-label{display:none}
+ .survivor-hud .hud-timer{min-width:205px;height:84px;padding:8px;left:56%;top:0}
+ .survivor-hud .hud-timer .micro-heading{font-size:8px}
+ .survivor-hud .hud-timer strong{font-size:26px;margin:5px 0}
+ .survivor-hud .hud-timer:before,.survivor-hud .hud-timer:after{font-size:27px;top:10px}
+ .survivor-hud .hud-actions{gap:4px}
+ .survivor-hud .icon-button{width:33px;height:35px;font-size:17px}
+ .survivor-hud .hud-rail{left:10px;top:144px;width:48px;gap:3px;padding:4px}
+ .survivor-hud .hud-nav-button{width:38px;height:37px;font-size:20px}
+ .survivor-hud .hud-popover{left:66px;top:144px}
+ .survivor-hud .hud-minimap{width:159px;height:171px;right:10px;bottom:72px}
+ .survivor-hud #minimap{height:119px}
+ .survivor-hud .hud-minimap.expanded{width:256px;height:252px}
+ .survivor-hud .hud-minimap.expanded #minimap{height:199px}
+ .survivor-hud .hud-bottom{bottom:8px;left:7px;right:7px;height:51px}
+ .survivor-hud .hud-exp-title b{display:none}
+ .survivor-hud .hud-stat{padding:0 5px}
+ .survivor-hud .hud-stat small{display:none}
+ .survivor-hud .hud-stat-icon{font-size:17px}
+}
+@media(max-width:680px){
+ .survivor-hud .hud-top{left:7px;right:7px}
+ .survivor-hud .hud-left-stack{width:min(56%,260px);min-width:0}
+ .survivor-hud .hud-profile{height:72px;gap:5px;padding:5px}
+ .survivor-hud .avatar-icon{width:43px;height:57px;flex-basis:43px}
+ .survivor-hud .portrait-crest{display:none}
+ .survivor-hud .hud-bar-title{font-size:11px}
+ .survivor-hud #level-label{font-size:8px;padding:2px 4px}
+ .survivor-hud .hud-resource{gap:2px;margin-top:5px}
+ .survivor-hud .resource-icon.health{font-size:12px}
+ .survivor-hud .bar.hp-bar{height:14px}
+ .survivor-hud #hp-label{font-size:9px;right:4px}
+ .survivor-hud .hud-secondary{font-size:7px;margin-top:5px}
+ .survivor-hud .hud-auto-skills{margin:3px 0 0 48px;padding:3px 5px}
+ .survivor-hud .hud-skill-prefix{display:none}
+ .survivor-hud .weapon-chip{width:28px;height:28px;min-width:28px}
+ .survivor-hud .weapon-chip .weapon-icon{font-size:17px}
+ .survivor-hud .hud-timer{
+  top:82px;left:auto;right:0;transform:none;
+  min-width:126px;width:40%;height:63px;padding:5px 2px;
+ }
+ .survivor-hud .hud-timer:before,.survivor-hud .hud-timer:after,
+ .survivor-hud .timer-ornament{display:none}
+ .survivor-hud .hud-timer strong{font-size:20px;margin:2px 0}
+ .survivor-hud .hud-timer .micro-heading{font-size:6px;letter-spacing:0}
+ .survivor-hud .kill-count{font-size:8px}
+ .survivor-hud .icon-button{width:29px;height:30px;font-size:15px}
+ .survivor-hud .hud-rail{top:145px;left:6px;width:39px;padding:3px}
+ .survivor-hud .hud-nav-button{width:31px;height:32px;font-size:17px}
+ .survivor-hud .hud-popover{top:151px;left:50px;max-width:calc(100vw - 60px)}
+ .survivor-hud .hud-minimap{bottom:68px;width:112px;height:134px;right:6px}
+ .survivor-hud .minimap-title{height:19px;font-size:7px;padding:0 5px}
+ .survivor-hud .minimap-foot{height:18px;font-size:6px;padding:0 5px}
+ .survivor-hud #minimap{height:96px}
+ .survivor-hud .hud-minimap.expanded{height:190px;width:174px}
+ .survivor-hud .hud-minimap.expanded #minimap{height:151px}
+ .survivor-hud .hud-bottom{height:43px;padding:0 8px;gap:4px}
+ .survivor-hud .hud-experience{gap:4px;min-width:0}
+ .survivor-hud .hud-exp-title{font-size:12px}
+ .survivor-hud .xp-bar{height:9px;min-width:18px}
+ .survivor-hud #xp-label{min-width:34px;font-size:10px}
+ .survivor-hud .hud-stat{padding:0 3px}
+ .survivor-hud .hud-stat:nth-child(n+3){display:none}
+ .survivor-hud .hud-stat-icon{font-size:14px}
+ .survivor-hud .hud-stat b{font-size:10px}
+}
